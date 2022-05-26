@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "d:\\大三\\编译原理\\plzoofs-master\\plzoofs-master\\microc\\microcc.fsproj": {}
+    "d:\\大三\\编译原理\\大作业\\ZZF-MicroC\\microc\\microcc.fsproj": {}
   },
   "projects": {
-    "d:\\大三\\编译原理\\plzoofs-master\\plzoofs-master\\microc\\microcc.fsproj": {
+    "d:\\大三\\编译原理\\大作业\\ZZF-MicroC\\microc\\microcc.fsproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "d:\\大三\\编译原理\\plzoofs-master\\plzoofs-master\\microc\\microcc.fsproj",
+        "projectUniqueName": "d:\\大三\\编译原理\\大作业\\ZZF-MicroC\\microc\\microcc.fsproj",
         "projectName": "microcc",
-        "projectPath": "d:\\大三\\编译原理\\plzoofs-master\\plzoofs-master\\microc\\microcc.fsproj",
+        "projectPath": "d:\\大三\\编译原理\\大作业\\ZZF-MicroC\\microc\\microcc.fsproj",
         "packagesPath": "C:\\Users\\张泽峰\\.nuget\\packages\\",
-        "outputPath": "d:\\大三\\编译原理\\plzoofs-master\\plzoofs-master\\microc\\obj\\",
+        "outputPath": "d:\\大三\\编译原理\\大作业\\ZZF-MicroC\\microc\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\张泽峰\\AppData\\Roaming\\NuGet\\NuGet.Config"

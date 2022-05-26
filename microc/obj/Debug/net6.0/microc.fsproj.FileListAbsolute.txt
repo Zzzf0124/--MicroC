@@ -1,3 +1,6 @@
 d:\大三\编译原理\plzoofs-master\plzoofs-master\microc\obj\Debug\net6.0\microc.AssemblyInfoInputs.cache
 d:\大三\编译原理\plzoofs-master\plzoofs-master\microc\obj\Debug\net6.0\microc.AssemblyInfo.fs
 d:\大三\编译原理\plzoofs-master\plzoofs-master\microc\obj\Debug\net6.0\microc.fsproj.CoreCompileInputs.cache
+d:\大三\编译原理\大作业\ZZF-MicroC\microc\obj\Debug\net6.0\microc.AssemblyInfoInputs.cache
+d:\大三\编译原理\大作业\ZZF-MicroC\microc\obj\Debug\net6.0\microc.AssemblyInfo.fs
+d:\大三\编译原理\大作业\ZZF-MicroC\microc\obj\Debug\net6.0\microc.fsproj.CoreCompileInputs.cache

@@ -230,9 +230,9 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\大三\\编译原理\\大作业\\ZZF-MicroC\\microc\\microc.fsproj",
-      "projectName": "microc",
-      "projectPath": "D:\\大三\\编译原理\\大作业\\ZZF-MicroC\\microc\\microc.fsproj",
+      "projectUniqueName": "D:\\大三\\编译原理\\大作业\\ZZF-MicroC\\microc\\interpc.fsproj",
+      "projectName": "interpc",
+      "projectPath": "D:\\大三\\编译原理\\大作业\\ZZF-MicroC\\microc\\interpc.fsproj",
       "packagesPath": "C:\\Users\\张泽峰\\.nuget\\packages\\",
       "outputPath": "D:\\大三\\编译原理\\大作业\\ZZF-MicroC\\microc\\obj\\",
       "projectStyle": "PackageReference",

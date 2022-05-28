@@ -23,8 +23,14 @@ and expr =                           // 表达式，右值
   | Addr of access                   (* &x   or  &*p   or  &a[e]    *)
   | CstI of int                      (* Constant int                *)
   | CstF of float32                  (* Constant float              *)
+  | CstC of char
   | Prim1 of string * expr           (* Unary primitive operator    *)
   | Prim2 of string * expr * expr    (* Binary primitive operator   *)
+  | Prim3 of expr * expr * expr      
+  | PreInc of access                 (* ++i *)
+  | PreDec of access                 (* --i *)                         
+  | PostInc of access                (* i++ *)
+  | PostDec of access                (* i-- *)
   | Andalso of expr * expr           (* Sequential and              *)
   | Orelse of expr * expr            (* Sequential or               *)
   | Call of string * expr list       (* Function call f(...)        *)
@@ -37,6 +43,13 @@ and access =                         //左值，存储的位置
 and stmt =                                                         
   | If of expr * stmt * stmt         (* Conditional                 *)
   | While of expr * stmt             (* While loop                  *)
+  
+  | DoWhile of  stmt * expr          (* DoWhile loop                *)  //dowhile循环
+  | DoUntil of stmt * expr           (* DoUntil loop                *)  //until循环
+  | Switch of expr * stmt list       (* switch-case                 *)  //switch-case条件分支 
+  | Case of expr * stmt 
+  | Default of stmt 
+  
   | Expr of expr                     (* Expression statement   e;   *)
   | Return of expr option            (* Return from method          *)
   | Block of stmtordec list          (* Block: grouping and scope   *)

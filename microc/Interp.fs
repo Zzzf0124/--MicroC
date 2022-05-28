@@ -270,6 +270,38 @@ let rec exec stmt (locEnv: locEnv) (gloEnv: gloEnv) (store: store) : store =
 
         loop store
 
+    | DoWhile(body,e) -> 
+        let rec loop store1 =
+                //求值 循环条件,注意变更环境 store
+            let (v, store2) = eval e locEnv gloEnv  store1
+                // 继续循环
+            if v<>0 then 
+                  loop (exec body locEnv gloEnv  store2)
+            else store2  //退出循环返回 环境store2
+      
+        loop (exec body locEnv gloEnv  store)
+
+    | DoUntil(body,e) -> 
+        let rec loop store1 =
+              let (v, store2) = eval e locEnv gloEnv  store1
+              if v=0 then loop (exec body locEnv gloEnv   store2)
+                    else store2    
+        loop (exec body locEnv gloEnv  store)
+    | Switch(e,body) ->  
+              let (res, store1) = eval e locEnv gloEnv  store
+              let rec choose list =
+                match list with
+                | Case(e1,body1) :: tail -> 
+                    let (res2, store2) = eval e1 locEnv gloEnv  store1
+                    if res2=res then exec body1 locEnv gloEnv  store2
+                                else choose tail
+                | [] -> store1
+                | Default( body1 ) :: tail -> 
+                    exec body1 locEnv gloEnv  store1
+                    choose tail
+              (choose body)
+    | Case(e,body) -> exec body locEnv gloEnv  store
+
     | Expr e ->
         // _ 表示丢弃e的值,返回 变更后的环境store1
         let (_, store1) = eval e locEnv gloEnv store
@@ -306,8 +338,9 @@ and eval e locEnv gloEnv store : int * store =
         let (res, store2) = eval e locEnv gloEnv store1
         (res, setSto store2 loc res)
     | CstI i -> (i, store)
-    // | CstF i -> (System.BitConverter.ToInt32(System.BitConverter.GetBytes(i), 0), store)
-    | CstF i -> ((int)i, store)
+    | CstF i -> (System.BitConverter.ToInt32(System.BitConverter.GetBytes(i), 0), store)
+    // | CstF i -> ((int)i, store)
+    | CstC i -> ((int32) (System.BitConverter.ToInt16(System.BitConverter.GetBytes(char (i)), 0)), store)
     | Addr acc -> access acc locEnv gloEnv store
     | Prim1 (ope, e1) ->
         let (i1, store1) = eval e1 locEnv gloEnv store
@@ -344,6 +377,25 @@ and eval e locEnv gloEnv store : int * store =
             | _ -> failwith ("unknown primitive " + ope)
 
         (res, store2)
+    
+    | PreInc acc -> //前置自增
+        let (loc, store1) as res = access acc locEnv gloEnv store 
+        let res = getSto store1 loc 
+        (res + 1, setSto store1 loc (res + 1)) 
+    | PreDec acc -> //前置自减
+        let (loc, store1) as res = access acc locEnv gloEnv store 
+        let res = getSto store1 loc 
+        (res - 1, setSto store1 loc (res - 1)) 
+    | PostInc acc -> //后置自增
+        let (loc, store1) as res = access acc locEnv gloEnv store 
+        let res = getSto store1 loc 
+        (res , setSto store1 loc (res + 1)) 
+    | PostDec acc -> //后置自减
+        let (loc, store1) as res = access acc locEnv gloEnv store 
+        let res = getSto store1 loc 
+        (res, setSto store1 loc (res - 1)) 
+    
+    
     | Andalso (e1, e2) ->
         let (i1, store1) as res = eval e1 locEnv gloEnv store
 

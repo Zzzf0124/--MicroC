@@ -25,22 +25,20 @@
 
 ## 二、项目自评等级（1-5）
 
-|                   词法                    | 评分 | 备注 |
-| :---------------------------------------: | :--: | :--: |
-|               注释 // /**/                |      |      |
-| 字符串常量 单引号' ' 双引号 "" 三引号 ''' |      |      |
-|                   语法                    |      |      |
-|         if的多种方式 switch case          |      |      |
-|    循环 for / while / do while/ until     |      |      |
-|               for in 表达式               |      |      |
-|                   语义                    |      |      |
-|          动态作用域，静态作用域           |      |      |
-|                 闭包支持                  |      |      |
-|               模式匹配支持                |      |      |
-|  中间代码生成 AST，四元式，三元式，llvm   |      |      |
-|          生成器 generator, yield          |      |      |
-
-
+| 解释器                                    | 评分 | 备注                     |
+| ----------------------------------------- | ---- | ------------------------ |
+| 注释 // /**/                              | 5    |                          |
+| 字符串常量 单引号' ' 双引号 "" 三引号 ''' | 3    |                          |
+| 数值常量 0b0101， 八进制0o777 十六0xFFDA  | 5    |                          |
+| if的多种方式 switch case                  | 5    |                          |
+| 循环 for / while / do while/ until        | 4    | for循环没有实现          |
+| 新增类型 float                            | 4    | 解释器输出float的ascii码 |
+| 新增类型 char                             | 4    | 解释器输出char的ascii码  |
+| 动态作用域，静态作用域                    |      |                          |
+| 闭包支持                                  |      |                          |
+| 模式匹配支持                              |      |                          |
+| 中间代码生成 AST，四元式，三元式，llvm    |      |                          |
+| 生成器 generator, yield                   |      |                          |
 
 ## 三、项目说明
 
@@ -123,6 +121,8 @@
 
 #### （一）增加 Float 类型
 
+**解释器**
+
 ​	float：单精度浮点型，识别格式为'数字'+'.'+'数字'+'f(F)'，在栈中占一个地址单位
 
 ​	运行解释器会将float数值
@@ -163,12 +163,8 @@
 
 - 解释器
 
-  这里把float转化为
-
-  [(1条消息) BitConvert_sophiemantela的博客-CSDN博客_bitconverter](https://blog.csdn.net/sophiemantela/article/details/78964913)
-
   ```sh
-  | CstF i -> (System.BitConverter.ToInt32(System.BitConverter.GetBytes(i), 0), store)
+| CstF i -> ((float)i, store)
   ```
 
 - 运行示例
@@ -184,11 +180,283 @@
 
   ![image-20220527225833069](README.assets/image-20220527225833069.png)
 
-#### （二）增加 String 类型
-
-#### （三）自增自减（++a/a++/--a/a--）
 
 
+#### （二）增加 char类型
+
+**解释器**
+
+- 解释器
+
+  ```sh
+  | CstC i -> ((int32) (System.BitConverter.ToInt16(System.BitConverter.GetBytes(char (i)), 0)), store)
+  ```
+
+- 运行示例
+
+  ```c
+  void main()
+  {
+      float h;
+      h = 1.5;
+      print h;
+  }
+  ```
+
+  ![image-20220528092453387](README.assets/image-20220528092453387.png)
 
 
+
+#### （三）进制转换
+
+Clex.fs
+
+- 转换函数
+
+  ```sh
+  // 2进制转换
+  let toBinary value=
+      let rec binaryToList value n =
+          match value%10 with
+          | _ when value%10 >= 0 && value%10 < 2 -> if value=0 then n else binaryToList (value/10) ((value%10)::n)
+          | _        -> failwith "Does not conform to binary number type."
+      let rec pow n =
+          if n=0 then 1
+          else 2 * (pow (n-1))
+      let rec len xs =
+          match xs with
+          | []-> 0
+          | x::xr->1 + len xr
+      let rec eval (n: int list) =
+          match n with
+          | [] -> 0
+          | xr::yr -> xr * pow (len yr) + eval yr
+      eval (binaryToList value [])
+  
+  // 8进制转换
+  let toOctal value=
+      let rec octalToList value n =
+          match value%10 with
+          | _ when value%10 >= 0 && value%10 < 8 -> if value=0 then n else octalToList (value/10) ((value%10)::n)
+          | _        -> failwith "Does not conform to octal number type."
+      let rec pow n =
+          if n=0 then 1
+          else 8 * (pow (n-1))
+      let rec len xs =
+          match xs with
+          | []-> 0
+          | x::xr->1 + len xr
+      let rec eval (n: int list) =
+          match n with
+          | [] -> 0
+          | xr::yr -> xr * pow (len yr) + eval yr
+      eval (octalToList value [])
+  //16进制转换
+  let toHex value = 
+      let rec hexaToList (str:string)  = 
+          if(str.Length <= 0) then []
+          else
+              match str.[0] with
+              | _ when str.[0] >='a' && str.[0] <= 'f'    -> (int str.[0]) - ( int 'a') + 10::hexaToList str.[1..str.Length - 1]
+              | _ when str.[0] >= 'A' && str.[0] <= 'F'   -> (int str.[0]) - ( int 'A') + 10::hexaToList str.[1..str.Length - 1]
+              | _ when str.[0] >= '0' && str.[0] <= '9'   -> (int str.[0]) - ( int '0') ::hexaToList str.[1..str.Length - 1]
+              | _                                         -> failwith "Does not conform to hex number type."
+      let result = hexaToList (value)
+      let mutable num = 0;
+      List.iter(fun i -> num <- num*16 + i)result
+      num
+  ```
+
+- rule规则
+
+  ```sh
+  | "0"['B''b']['0'-'1']+  { CSTINT (toBinary(System.Int32.Parse (binHexOct (lexemeAsString lexbuf))))}   
+  | "0"['O''o']['0'-'7']+  { CSTINT (toOctal(System.Int32.Parse (binHexOct (lexemeAsString lexbuf))))}
+  | "0"['X''x']['0'-'9''A'-'F''a'-'f']+  {CSTINT (hex2Dec(binHexOct (lexemeAsString lexbuf)))} 
+  ```
+
+- 运行示例
+
+  ```c
+  void main(){
+    int a;
+    a=0b1111;
+    int b;
+    b=0o117;
+  
+    print a;
+    print b;
+  }
+  ```
+
+  ![image-20220528114145635](README.assets/image-20220528114145635.png)
+
+
+
+#### （四）自增自减（++a/a++/--a/a--）
+
+- 语法树
+
+  ```sh
+  | PreInc of access                 (* ++i *)
+  | PreDec of access                 (* --i *)                         
+  | PostInc of access                (* i++ *)
+  | PostDec of access                (* i-- *)
+  ```
+
+- 词法定义
+
+  ```sh
+  | "++"            { SELFINC }    //前置自增，后置自增
+  | "--"            { SELFDEC }    //前置自减，后置自减
+  ```
+
+- 语法定义
+
+  ```sh
+  //词元
+  %token SELFINC SELFDEC       //自增 自减
+  //优先级
+  %nonassoc NOT AMP SELFINC SELFDEC 
+  ```
+
+- 解释器
+
+  ```sh
+  | PreInc acc -> //前置自增
+      let (loc, store1) as res = access acc locEnv gloEnv store 
+      let res = getSto store1 loc 
+      (res + 1, setSto store1 loc (res + 1)) 
+  | PreDec acc -> //前置自减
+      let (loc, store1) as res = access acc locEnv gloEnv store 
+      let res = getSto store1 loc 
+      (res - 1, setSto store1 loc (res - 1)) 
+  | PostInc acc -> //后置自增
+      let (loc, store1) as res = access acc locEnv gloEnv store 
+      let res = getSto store1 loc 
+      (res , setSto store1 loc (res + 1)) 
+  | PostDec acc -> //后置自减
+      let (loc, store1) as res = access acc locEnv gloEnv store 
+      let res = getSto store1 loc 
+      (res, setSto store1 loc (res - 1)) 
+  ```
+
+- 运行示例
+
+  ```c
+  void main(){
+      int a;
+      a = 3;
+      print a++;
+      a = 3;
+      print ++a;
+  
+      a = 3;
+      print a--;
+      a = 3;
+      print --a;
+  }
+  ```
+
+  ![image-20220528112031037](README.assets/image-20220528112031037.png)
+
+
+
+#### （五）doWhile/doUntil
+
+- 抽象语法树
+
+  ```sh
+  and stmt =     
+    | DoWhile of  stmt * expr          (* DoWhile loop                *)
+    | DoUntil of stmt * expr           (* DoUntil loop                *)
+  ```
+
+- 词法定义
+
+  ```sh
+  | "do"      -> DO  
+  | "dowhile" -> DOWHILE
+  | "until"   -> UNTIL  
+  | "dountil" -> DOUNTIL   
+  ```
+
+- 语法
+
+  ```
+  //词元
+  %token  WHILE DO DOWHILE UNTIL DOUNTIL
+  //用法
+  StmtM:
+    | DO StmtM WHILE LPAR Expr RPAR SEMI  { DoWhile($2, $5)      }
+    | DO StmtM UNTIL LPAR Expr RPAR SEMI  { DoUntil($2, $5)      }
+  ```
+
+- 解释器
+
+  ```sh
+  | DoWhile(body,e) -> 
+          let rec loop store1 =
+                  //求值 循环条件,注意变更环境 store
+              let (v, store2) = eval e locEnv gloEnv  store1
+                  // 继续循环
+              if v<>0 then 
+                    loop (exec body locEnv gloEnv  store2)
+              else store2  //退出循环返回 环境store2
+        
+          loop (exec body locEnv gloEnv  store)
+  | DoUntil(body,e) -> 
+          let rec loop store1 =
+                let (v, store2) = eval e locEnv gloEnv  store1
+                if v=0 then loop (exec body locEnv gloEnv   store2)
+                      else store2    
+          loop (exec body locEnv gloEnv  store)
+  ```
+
+- 运行示例
+
+  ```c
+  void main(){
+      int n;
+      n = 0;
+      do
+      {
+          print n;
+          n++;
+      } while (n < 3);
+  }
+  
+  void main() {
+      int i;
+      i=0;
+     do{
+       print ++i;
+     }
+     until(i>3);
+  
+  }
+  ```
+
+  ![image-20220528134554587](README.assets/image-20220528134554587.png)
+
+#### （六）switch-case
+
+- 运行示例
+
+  ```c
+  void main(int n){
+    int a;
+    a=1;
+    int b;
+    b=2;
+    switch (n){
+      case 1:print a;
+      case 2:print b;
+      default:
+        break;
+    }
+  }
+  ```
+
+  ![image-20220528141533958](README.assets/image-20220528141533958.png)
 

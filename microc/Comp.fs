@@ -255,6 +255,13 @@ and cExpr (e: expr) (varEnv: VarEnv) (funEnv: FunEnv) : instr list =
              | ">" -> [ SWAP; LT ]
              | "<=" -> [ SWAP; LT; NOT ]
              | _ -> raise (Failure "unknown primitive 2"))
+    
+    
+    | PreInc acc -> cAccess acc varEnv funEnv @ [ DUP; LDI; CSTI 1; ADD; STI ]//前置自增
+    | PreDec acc -> cAccess acc varEnv funEnv @ [ DUP; LDI; CSTI 1; SUB; STI ]//前置自减
+    | PostInc acc -> cAccess acc varEnv funEnv @ [ DUP; LDI; SWAP; DUP; LDI; CSTI 1; ADD; STI ; INCSP -1]//后置自增
+    | PostDec acc -> cAccess acc varEnv funEnv @ [ DUP; LDI; SWAP; DUP; LDI; CSTI 1; SUB; STI ; INCSP -1]//后置自减
+    
     | Andalso (e1, e2) ->
         let labend = newLabel ()
         let labfalse = newLabel ()

@@ -12,6 +12,8 @@ type token =
   | COMMA
   | ASSIGN
   | AMP
+  | QUE
+  | COLON
   | NOT
   | SEQOR
   | SEQAND
@@ -21,6 +23,8 @@ type token =
   | LT
   | GE
   | LE
+  | SELFINC
+  | SELFDEC
   | PLUS
   | MINUS
   | TIMES
@@ -37,6 +41,14 @@ type token =
   | RETURN
   | VOID
   | WHILE
+  | DO
+  | DOWHILE
+  | UNTIL
+  | DOUNTIL
+  | SWITCH
+  | CASE
+  | DEFAULT
+  | CSTCHAR of (char)
   | CSTFLOAT of (float32)
   | CSTSTRING of (string)
   | NAME of (string)
@@ -54,6 +66,8 @@ type tokenId =
     | TOKEN_COMMA
     | TOKEN_ASSIGN
     | TOKEN_AMP
+    | TOKEN_QUE
+    | TOKEN_COLON
     | TOKEN_NOT
     | TOKEN_SEQOR
     | TOKEN_SEQAND
@@ -63,6 +77,8 @@ type tokenId =
     | TOKEN_LT
     | TOKEN_GE
     | TOKEN_LE
+    | TOKEN_SELFINC
+    | TOKEN_SELFDEC
     | TOKEN_PLUS
     | TOKEN_MINUS
     | TOKEN_TIMES
@@ -79,6 +95,14 @@ type tokenId =
     | TOKEN_RETURN
     | TOKEN_VOID
     | TOKEN_WHILE
+    | TOKEN_DO
+    | TOKEN_DOWHILE
+    | TOKEN_UNTIL
+    | TOKEN_DOUNTIL
+    | TOKEN_SWITCH
+    | TOKEN_CASE
+    | TOKEN_DEFAULT
+    | TOKEN_CSTCHAR
     | TOKEN_CSTFLOAT
     | TOKEN_CSTSTRING
     | TOKEN_NAME
@@ -109,6 +133,8 @@ type nonTerminalId =
     | NONTERM_Exprs1
     | NONTERM_Const
     | NONTERM_ConstFloat
+    | NONTERM_ConstChar
+    | NONTERM_StmtCase
     | NONTERM_Type
 /// This function maps tokens to integer indexes
 val tagOfToken: token -> int

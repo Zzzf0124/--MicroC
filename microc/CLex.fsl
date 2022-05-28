@@ -12,6 +12,8 @@ open CPar  // Token 的定义位于语法分析模块中
 let lexemeAsString lexbuf = 
     LexBuffer<char>.LexemeString lexbuf
 
+
+
 (* Scan keywords as identifiers and use this function to distinguish them. *)
 (* If the set of keywords is large, use a hashtable instead.               *)
 // keyword 处理关键字与标识符的辅助函数
@@ -29,7 +31,14 @@ let keyword s =
     | "return"  -> RETURN
     | "true"    -> CSTBOOL 1
     | "void"    -> VOID 
-    | "while"   -> WHILE         
+    | "while"   -> WHILE
+    | "do"      -> DO  
+    | "dowhile" -> DOWHILE
+    | "until"   -> UNTIL  
+    | "dountil" -> DOUNTIL
+    | "switch"  -> SWITCH
+    | "case"    -> CASE
+    | "default" -> DEFAULT      
     | _         -> NAME s   // 缺省情况，是标识符的名字，如 函数名，变量名等
                             // 当所有的关键字没有匹配成功时，则当成标识符
 // 字符串转义符处理函数
@@ -45,6 +54,72 @@ let cEscape s =
     | "\\f"  -> '\012'
     | "\\r"  -> '\r'
     | _      -> failwith "Lexer error: impossible C escape"
+
+
+// 2进制转换
+let toBinary value=
+    let rec binaryToList value n =
+        match value%10 with
+        | _ when value%10 >= 0 && value%10 < 2 -> if value=0 then n else binaryToList (value/10) ((value%10)::n)
+        | _        -> failwith "Does not conform to binary number type."
+    let rec pow n =
+        if n=0 then 1
+        else 2 * (pow (n-1))
+    let rec len xs =
+        match xs with
+        | []-> 0
+        | x::xr->1 + len xr
+    let rec eval (n: int list) =
+        match n with
+        | [] -> 0
+        | xr::yr -> xr * pow (len yr) + eval yr
+    eval (binaryToList value [])
+
+// 8进制转换函数
+let toOctal value=
+    let rec octalToList value n =
+        match value%10 with
+        | _ when value%10 >= 0 && value%10 < 8 -> if value=0 then n else octalToList (value/10) ((value%10)::n)
+        | _        -> failwith "Does not conform to octal number type."
+    let rec pow n =
+        if n=0 then 1
+        else 8 * (pow (n-1))
+    let rec len xs =
+        match xs with
+        | []-> 0
+        | x::xr->1 + len xr
+    let rec eval (n: int list) =
+        match n with
+        | [] -> 0
+        | xr::yr -> xr * pow (len yr) + eval yr
+    eval (octalToList value [])
+
+// 16进制转换函数
+let toHex value = 
+    let rec hexaToList (str:string)  = 
+        if(str.Length <= 0) then []
+        else
+            match str.[0] with
+            | _ when str.[0] >='a' && str.[0] <= 'f'    -> (int str.[0]) - ( int 'a') + 10::hexaToList str.[1..str.Length - 1]
+            | _ when str.[0] >= 'A' && str.[0] <= 'F'   -> (int str.[0]) - ( int 'A') + 10::hexaToList str.[1..str.Length - 1]
+            | _ when str.[0] >= '0' && str.[0] <= '9'   -> (int str.[0]) - ( int '0') ::hexaToList str.[1..str.Length - 1]
+            | _                                         -> failwith "Does not conform to hex number type."
+    let result = hexaToList (value)
+    let mutable num = 0;
+    List.iter(fun i -> num <- num*16 + i)result
+    num
+
+//字符前缀
+let binHexOct (s:string) =
+    match s.[0..1] with
+    | "0B"
+    | "0b"
+    | "0O"
+    | "0o" 
+    | "0X"
+    | "0x" ->   s.[2..(s.Length)-1] 
+    | _    ->   failwith "Lexer error: no such radix"
+
 }
                         
 rule Token = parse          // 每个 规则rule 会生成为一个函数，函数名是规则名 Token
@@ -64,7 +139,16 @@ rule Token = parse          // 每个 规则rule 会生成为一个函数，函�
                     { CSTFLOAT (System.Single.Parse (lexemeAsString lexbuf)) }
 
 
+  | ['\'']['a'-'z''A'-'Z''0'-'9']['\'']            
+                    { try let single = lexemeAsString lexbuf in CSTCHAR (System.Char.Parse(single.Substring(1, 1))) with ex -> failwith "Char literal error." }
 
+  
+  | "0"['B''b']['0'-'1']+                { CSTINT (toBinary(System.Int32.Parse (binHexOct (lexemeAsString lexbuf))))}    
+  | "0"['O''o']['0'-'7']+                { CSTINT (toOctal(System.Int32.Parse (binHexOct (lexemeAsString lexbuf))))}
+  | "0"['X''x']['0'-'9''A'-'F''a'-'f']+  {CSTINT (toHex(binHexOct (lexemeAsString lexbuf)))}  
+
+  
+  
   | ['a'-'z''A'-'Z']['a'-'z''A'-'Z''0'-'9']*
                     { keyword (lexemeAsString lexbuf) } //标识符处理
                                                        //先查是否是关键字，是则返回对应关键字的Token
@@ -73,6 +157,8 @@ rule Token = parse          // 每个 规则rule 会生成为一个函数，函�
   | '-'             { MINUS } 
   | '*'             { TIMES } 
   | '/'             { DIV } 
+  | "++"            { SELFINC }    //前置自增，后置自增
+  | "--"            { SELFDEC }    //前置自减，后置自减
   | '%'             { MOD }                     
   | '='             { ASSIGN } 
   | "=="            { EQ } 
@@ -93,6 +179,8 @@ rule Token = parse          // 每个 规则rule 会生成为一个函数，函�
   | ']'             { RBRACK }
   | ';'             { SEMI }
   | ','             { COMMA }
+  | ':'             { COLON }           (*case case*)
+  | "?"             { QUE }
   | "//"            { EndLineComment lexbuf; Token lexbuf }  //单行注释处理规则，调用响应处理函数
                                                              //参数是 lexbuf
                                                              // 处理完后 lexbuf 内容已经更新，注释部分过滤
@@ -135,3 +223,4 @@ and String chars = parse
       { failwith "Lexer error: invalid character in string" }  // 字符串中出现 ASCII 控制字符
   | _
       { String (char (lexbuf.LexemeChar 0) :: chars) lexbuf } // 将读到的第1个字符加到临时的chars数组
+

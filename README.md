@@ -25,20 +25,33 @@
 
 ## 二、项目自评等级（1-5）
 
-| 解释器                                    | 评分 | 备注                     |
-| ----------------------------------------- | ---- | ------------------------ |
-| 注释 // /**/                              | 5    |                          |
-| 字符串常量 单引号' ' 双引号 "" 三引号 ''' | 3    |                          |
-| 数值常量 0b0101， 八进制0o777 十六0xFFDA  | 5    |                          |
-| if的多种方式 switch case                  | 5    |                          |
-| 循环 for / while / do while/ until        | 4    | for循环没有实现          |
-| 新增类型 float                            | 4    | 解释器输出float的ascii码 |
-| 新增类型 char                             | 4    | 解释器输出char的ascii码  |
-| 动态作用域，静态作用域                    |      |                          |
-| 闭包支持                                  |      |                          |
-| 模式匹配支持                              |      |                          |
-| 中间代码生成 AST，四元式，三元式，llvm    |      |                          |
-| 生成器 generator, yield                   |      |                          |
+|                  解释器                   | 完善度 |                        备注                        |
+| :---------------------------------------: | :----: | :------------------------------------------------: |
+|               注释 // /**/                |   5    |                   增加（**）注释                   |
+| 字符串常量 单引号' ' 双引号 "" 三引号 ''' |   4    |                   没有实现三引号                   |
+| 数值常量 0b0101， 八进制0o777 十六0xFFDA  |   5    | 给定二进制、八进制、十六进制数，转化为对应的十进制 |
+|            switch case default            |   4    |                 只实现了int类型的                  |
+|                  for循环                  |   5    |                    实现for循环                     |
+|                 while循环                 |   5    |                   实现while循环                    |
+|               do-while循环                |   5    |                  实现do-while循环                  |
+|               do-until循环                |   5    |                  实现do-until循环                  |
+|              新增类型 float               |   5    |             支持float类型的识别与输出              |
+|               新增类型 char               |   5    |              支持char类型的识别与输出              |
+|               新增类型 bool               |   5    |        支持bool类型(false\true)的定义与输出        |
+
+|        编译器         | 完善程度 |                备注                 |
+| :-------------------: | :------: | :---------------------------------: |
+|       char类型        |    5     |                                     |
+|       float类型       |    5     |                                     |
+|     do-until循环      |    5     |                                     |
+|     do-while循环      |    5     |                                     |
+| switch  case  default |    5     |                                     |
+|        for循环        |    5     |                                     |
+|     数据初值定义      |    3     |      不支持数组和结构体的初值       |
+|       三目运算        |    5     |                                     |
+|      += 等语法糖      |    5     |                                     |
+|   自增自减（++/--)    |    3     | 可以识别 ++i 和 i++，但是返回值不对 |
+|    修改Java虚拟机     |    5     |    支出了一条新的指令输出浮点数     |
 
 ## 三、项目说明
 
@@ -93,12 +106,13 @@
 - **编译器：**
 
   ```sh
-  gcc -o machine.exe machine.c #生成c虚拟机
+  javac Machine.java#生成java虚拟机
   dotnet restore microc.fsproj #可选
   dotnet clean microc.fsproj #可选
   dotnet build microc.fsproj #构建./bin/Debug/net6.0/microc.exe
-  dotnet run --project microc.fsproj zzf_program/test-float.c
-  .\machine.exe -trace zzf_program/test-float.out 0 #追踪查看运行栈
+  	
+  dotnet run --project microc.fsproj zzf_program/test-float.c  #执行编译器，编译.c文件，并输出 .out文件
+  java Machinetrace zzf_program/test-float.out 0 #追踪查看运行栈
   ```
 
   ![img](https://img-blog.csdnimg.cn/2021051517272214.png)
@@ -119,9 +133,9 @@
 
 ## 四、功能实现
 
-#### （一）增加 Float 类型
+### 解释器
 
-**解释器**
+#### （一）增加 Float 类型
 
 ​	float：单精度浮点型，识别格式为'数字'+'.'+'数字'+'f(F)'，在栈中占一个地址单位
 
@@ -173,18 +187,16 @@
   void main()
   {
       float h;
-      h = 1.5;
-      print h;
+      h = 12.5;
+      print ("%f", h);
   }
   ```
 
-  ![image-20220527225833069](README.assets/image-20220527225833069.png)
+  ![image-20220528203156837](README.assets/image-20220528203156837.png)
 
 
 
 #### （二）增加 char类型
-
-**解释器**
 
 - 解释器
 
@@ -195,19 +207,45 @@
 - 运行示例
 
   ```c
-  void main()
+  int main()
   {
-      float h;
-      h = 1.5;
-      print h;
+      char a;
+      a = 'a';
+      /*2131231*/
+      print a;
+      print("%c",a);
+  }
+  ```
+  
+  ![image-20220528203209839](README.assets/image-20220528203209839.png)
+
+
+
+#### （三）增加bool类型
+
+- 解释器
+
+  ```fsharp
+  | CstB i -> let res =
+      			match i with
+      			|true -> 1
+      			|false ->0
+         		(res,store)
+  ```
+
+- 运行示例
+
+  ```c
+  void main(){
+    bool a;
+    a = false;
+    print a;
   }
   ```
 
-  ![image-20220528092453387](README.assets/image-20220528092453387.png)
+  ![image-20220529112050628](README.assets/image-20220529112050628.png)
 
-
-
-#### （三）进制转换
+#### （四）进制转换
 
 Clex.fs
 
@@ -293,7 +331,7 @@ Clex.fs
 
 
 
-#### （四）自增自减（++a/a++/--a/a--）
+#### （五）自增自减（++a/a++/--a/a--）
 
 - 语法树
 
@@ -362,7 +400,7 @@ Clex.fs
 
 
 
-#### （五）doWhile/doUntil
+#### （六）doWhile/doUntil
 
 - 抽象语法树
 
@@ -439,7 +477,7 @@ Clex.fs
 
   ![image-20220528134554587](README.assets/image-20220528134554587.png)
 
-#### （六）switch-case
+#### （七）switch-case
 
 - 运行示例
 
@@ -460,3 +498,46 @@ Clex.fs
 
   ![image-20220528141533958](README.assets/image-20220528141533958.png)
 
+#### （八）for循环
+
+- 解释器
+
+  ```fsharp
+      | For(e1,e2,e3,body) -> 
+        let (res ,store0) = eval e1 locEnv gloEnv  store
+        let rec loop store1 =
+              //求值 循环条件,注意变更环境 store
+            let (v, store2) = eval e2 locEnv gloEnv  store1
+              // 继续循环
+            if v<>0 then  
+                          let (reend ,store3) = eval e3 locEnv gloEnv  (exec body locEnv gloEnv  store2)
+                          loop store3
+                        else store2  
+        loop store0
+  ```
+
+- 运行示例
+
+  ```
+  void main(){
+    int a;
+    a = 0;
+    for(a;a <= 3;a++){
+      print a;
+    }
+  }
+  ```
+
+  ![image-20220528204113320](README.assets/image-20220528204113320.png)
+
+
+
+### 编译器
+
+（1）在Absyn.fs中定义抽象语法（解释器已完成）
+
+（2）若需要添加汇编指令，在Machine.c中添加
+
+（3）在Comp.fs中添加相应的实现
+
+（一）

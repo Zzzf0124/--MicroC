@@ -16,6 +16,7 @@ type typ =
   | TypF
   | TypA of typ * int option         (* Array type                  *)
   | TypP of typ                      (* Pointer type                *)
+  | TypB                             (* Type boolean*)
                                                                    
 and expr =                           // 表达式，右值                                                
   | Access of access                 (* x    or  *p    or  a[e]     *) //访问左值（右值）
@@ -24,6 +25,7 @@ and expr =                           // 表达式，右值
   | CstI of int                      (* Constant int                *)
   | CstF of float32                  (* Constant float              *)
   | CstC of char
+  | CstB of bool
   | Prim1 of string * expr           (* Unary primitive operator    *)
   | Prim2 of string * expr * expr    (* Binary primitive operator   *)
   | Prim3 of expr * expr * expr      
@@ -34,7 +36,8 @@ and expr =                           // 表达式，右值
   | Andalso of expr * expr           (* Sequential and              *)
   | Orelse of expr * expr            (* Sequential or               *)
   | Call of string * expr list       (* Function call f(...)        *)
-                                                                   
+  | Print of string * expr           (* Print *)
+
 and access =                         //左值，存储的位置                                            
   | AccVar of string                 (* Variable access        x    *) 
   | AccDeref of expr                 (* Pointer dereferencing  *p   *)
@@ -49,7 +52,9 @@ and stmt =
   | Switch of expr * stmt list       (* switch-case                 *)  //switch-case条件分支 
   | Case of expr * stmt 
   | Default of stmt 
-  
+  | For of expr * expr  * expr * stmt (*for loop*)                      //for循环
+
+
   | Expr of expr                     (* Expression statement   e;   *)
   | Return of expr option            (* Return from method          *)
   | Block of stmtordec list          (* Block: grouping and scope   *)

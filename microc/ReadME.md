@@ -79,8 +79,8 @@ dotnet fsi
 #load "Absyn.fs" "Debug.fs" "CPar.fs" "CLex.fs" "Parse.fs" "Interp.fs" "ParseAndRun.fs" ;; 
 
 open ParseAndRun;;    //导入模块 ParseAndRun
-fromFile "example\ex1.c";;    //显示 ex1.c的语法树
-run (fromFile "example\ex1.c") [17];; //解释执行 ex1.c
+fromFile "example\ex1.c";;    								//显示 ex1.c的语法树
+run (fromFile "example\ex1.c") [17];; //解释执行 ex1.c		 //输出store内容
 run (fromFile "example\ex11.c") [8];; //解释执行 ex11.c
 
 Debug.debug <-  true  //打开调试

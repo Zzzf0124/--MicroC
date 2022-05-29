@@ -35,6 +35,7 @@ type token =
   | IF
   | INT
   | FLOAT
+  | BOOL
   | NULL
   | PRINT
   | PRINTLN
@@ -48,12 +49,13 @@ type token =
   | SWITCH
   | CASE
   | DEFAULT
+  | FOR
+  | CSTBOOL of (bool)
   | CSTCHAR of (char)
   | CSTFLOAT of (float32)
   | CSTSTRING of (string)
   | NAME of (string)
   | CSTINT of (int)
-  | CSTBOOL of (int)
 type tokenId = 
     | TOKEN_EOF
     | TOKEN_LPAR
@@ -89,6 +91,7 @@ type tokenId =
     | TOKEN_IF
     | TOKEN_INT
     | TOKEN_FLOAT
+    | TOKEN_BOOL
     | TOKEN_NULL
     | TOKEN_PRINT
     | TOKEN_PRINTLN
@@ -102,12 +105,13 @@ type tokenId =
     | TOKEN_SWITCH
     | TOKEN_CASE
     | TOKEN_DEFAULT
+    | TOKEN_FOR
+    | TOKEN_CSTBOOL
     | TOKEN_CSTCHAR
     | TOKEN_CSTFLOAT
     | TOKEN_CSTSTRING
     | TOKEN_NAME
     | TOKEN_CSTINT
-    | TOKEN_CSTBOOL
     | TOKEN_end_of_input
     | TOKEN_error
 type nonTerminalId = 
@@ -134,6 +138,7 @@ type nonTerminalId =
     | NONTERM_Const
     | NONTERM_ConstFloat
     | NONTERM_ConstChar
+    | NONTERM_ConstBool
     | NONTERM_StmtCase
     | NONTERM_Type
 /// This function maps tokens to integer indexes

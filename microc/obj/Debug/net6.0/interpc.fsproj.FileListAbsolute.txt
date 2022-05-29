@@ -1,6 +1,9 @@
 d:\大三\编译原理\plzoofs-master\plzoofs-master\microc\obj\Debug\net6.0\interpc.AssemblyInfoInputs.cache
 d:\大三\编译原理\plzoofs-master\plzoofs-master\microc\obj\Debug\net6.0\interpc.AssemblyInfo.fs
 d:\大三\编译原理\plzoofs-master\plzoofs-master\microc\obj\Debug\net6.0\interpc.fsproj.CoreCompileInputs.cache
+D:\大三\编译原理\大作业\ZZF-MicroC\microc\obj\Debug\net6.0\interpc.fsproj.AssemblyReference.cache
+D:\大三\编译原理\大作业\ZZF-MicroC\microc\obj\Debug\net6.0\interpc.AssemblyInfoInputs.cache
+D:\大三\编译原理\大作业\ZZF-MicroC\microc\obj\Debug\net6.0\interpc.AssemblyInfo.fs
 D:\大三\编译原理\大作业\ZZF-MicroC\microc\bin\Debug\net6.0\interpc.exe
 D:\大三\编译原理\大作业\ZZF-MicroC\microc\bin\Debug\net6.0\interpc.deps.json
 D:\大三\编译原理\大作业\ZZF-MicroC\microc\bin\Debug\net6.0\interpc.runtimeconfig.json
@@ -21,9 +24,6 @@ D:\大三\编译原理\大作业\ZZF-MicroC\microc\bin\Debug\net6.0\ru\FSharp.Co
 D:\大三\编译原理\大作业\ZZF-MicroC\microc\bin\Debug\net6.0\tr\FSharp.Core.resources.dll
 D:\大三\编译原理\大作业\ZZF-MicroC\microc\bin\Debug\net6.0\zh-Hans\FSharp.Core.resources.dll
 D:\大三\编译原理\大作业\ZZF-MicroC\microc\bin\Debug\net6.0\zh-Hant\FSharp.Core.resources.dll
-D:\大三\编译原理\大作业\ZZF-MicroC\microc\obj\Debug\net6.0\interpc.fsproj.AssemblyReference.cache
-D:\大三\编译原理\大作业\ZZF-MicroC\microc\obj\Debug\net6.0\interpc.AssemblyInfoInputs.cache
-D:\大三\编译原理\大作业\ZZF-MicroC\microc\obj\Debug\net6.0\interpc.AssemblyInfo.fs
 D:\大三\编译原理\大作业\ZZF-MicroC\microc\obj\Debug\net6.0\interpc.fsproj.CopyComplete
 D:\大三\编译原理\大作业\ZZF-MicroC\microc\obj\Debug\net6.0\interpc.dll
 D:\大三\编译原理\大作业\ZZF-MicroC\microc\obj\Debug\net6.0\interpc.pdb

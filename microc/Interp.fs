@@ -302,6 +302,21 @@ let rec exec stmt (locEnv: locEnv) (gloEnv: gloEnv) (store: store) : store =
               (choose body)
     | Case(e,body) -> exec body locEnv gloEnv  store
 
+
+    | For(e1,e2,e3,body) -> 
+      let (res ,store0) = eval e1 locEnv gloEnv  store
+      let rec loop store1 =
+            //求值 循环条件,注意变更环境 store
+          let (v, store2) = eval e2 locEnv gloEnv  store1
+            // 继续循环
+          if v<>0 then  
+            let (reend ,store3) = eval e3 locEnv gloEnv  (exec body locEnv gloEnv  store2)
+            loop store3
+          else store2  
+      loop store0
+
+
+
     | Expr e ->
         // _ 表示丢弃e的值,返回 变更后的环境store1
         let (_, store1) = eval e locEnv gloEnv store
@@ -341,6 +356,11 @@ and eval e locEnv gloEnv store : int * store =
     | CstF i -> (System.BitConverter.ToInt32(System.BitConverter.GetBytes(i), 0), store)
     // | CstF i -> ((int)i, store)
     | CstC i -> ((int32) (System.BitConverter.ToInt16(System.BitConverter.GetBytes(char (i)), 0)), store)
+    | CstB i -> let res =
+                  match i with
+                  |true -> 1
+                  |false ->0
+                (res,store)
     | Addr acc -> access acc locEnv gloEnv store
     | Prim1 (ope, e1) ->
         let (i1, store1) = eval e1 locEnv gloEnv store
@@ -395,6 +415,14 @@ and eval e locEnv gloEnv store : int * store =
         let res = getSto store1 loc 
         (res, setSto store1 loc (res - 1)) 
     
+    | Print(op,e1)  ->  let (i1, store1) = eval e1 locEnv gloEnv store
+                        let res = 
+                          match op with
+                          | "%c"  -> (printf "%c " (System.BitConverter.ToChar(System.BitConverter.GetBytes(i1),0)); i1)
+                          | "%d"  -> (printf "%d " i1 ; i1) 
+                          | "%f"  -> (printf "%f " (System.BitConverter.ToSingle(System.BitConverter.GetBytes(i1),0)) ;i1)
+                          | "%s"  -> (printf "%s " (string i1) ;i1 )
+                        (res, store1) 
     
     | Andalso (e1, e2) ->
         let (i1, store1) as res = eval e1 locEnv gloEnv store

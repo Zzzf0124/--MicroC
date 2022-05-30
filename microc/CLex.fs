@@ -23,7 +23,6 @@ let keyword s =
     match s with
     | "char"    -> CHAR    // 返回对应的Token ,Token 定义于 CPar.fsl 文件中
     | "else"    -> ELSE
-    // | "false"   -> CSTBOOL 0
     | "if"      -> IF
     | "int"     -> INT
     | "float"   -> FLOAT
@@ -34,7 +33,6 @@ let keyword s =
     | "print"   -> PRINT
     | "println" -> PRINTLN
     | "return"  -> RETURN
-    // | "true"    -> CSTBOOL 1
     | "void"    -> VOID 
     | "while"   -> WHILE
     | "do"      -> DO  
@@ -127,7 +125,7 @@ let binHexOct (s:string) =
     | _    ->   failwith "Lexer error: no such radix"
 
 
-# 130 "CLex.fs"
+# 128 "CLex.fs"
 let trans : uint16[] array = 
     [| 
     (* State 0 *)
@@ -312,321 +310,321 @@ let rec _fslex_dummy () = _fslex_dummy()
 and Token  lexbuf =
   match _fslex_tables.Interpret(28,lexbuf) with
   | 0 -> ( 
-# 130 "CLex.fsl"
+# 128 "CLex.fsl"
                                      Token lexbuf 
-# 317 "CLex.fs"
+# 315 "CLex.fs"
           )
   | 1 -> ( 
-# 135 "CLex.fsl"
+# 133 "CLex.fsl"
                                      lexbuf.EndPos <- lexbuf.EndPos.NextLine; Token lexbuf 
-# 322 "CLex.fs"
+# 320 "CLex.fs"
           )
   | 2 -> ( 
-# 137 "CLex.fsl"
+# 135 "CLex.fsl"
                                      CSTINT (System.Int32.Parse (lexemeAsString lexbuf)) 
-# 327 "CLex.fs"
+# 325 "CLex.fs"
           )
   | 3 -> ( 
-# 143 "CLex.fsl"
+# 141 "CLex.fsl"
                                      CSTFLOAT (System.Single.Parse (lexemeAsString lexbuf)) 
-# 332 "CLex.fs"
+# 330 "CLex.fs"
           )
   | 4 -> ( 
-# 147 "CLex.fsl"
+# 145 "CLex.fsl"
                                      try let single = lexemeAsString lexbuf in CSTCHAR (System.Char.Parse(single.Substring(1, 1))) with ex -> failwith "Char literal error." 
-# 337 "CLex.fs"
+# 335 "CLex.fs"
           )
   | 5 -> ( 
-# 150 "CLex.fsl"
+# 148 "CLex.fsl"
                                                           CSTINT (toBinary(System.Int32.Parse (binHexOct (lexemeAsString lexbuf))))
-# 342 "CLex.fs"
+# 340 "CLex.fs"
           )
   | 6 -> ( 
-# 151 "CLex.fsl"
+# 149 "CLex.fsl"
                                                           CSTINT (toOctal(System.Int32.Parse (binHexOct (lexemeAsString lexbuf))))
-# 347 "CLex.fs"
+# 345 "CLex.fs"
           )
   | 7 -> ( 
-# 152 "CLex.fsl"
+# 150 "CLex.fsl"
                                                          CSTINT (toHex(binHexOct (lexemeAsString lexbuf)))
-# 352 "CLex.fs"
+# 350 "CLex.fs"
           )
   | 8 -> ( 
-# 157 "CLex.fsl"
+# 155 "CLex.fsl"
                                      keyword (lexemeAsString lexbuf) 
-# 357 "CLex.fs"
+# 355 "CLex.fs"
           )
   | 9 -> ( 
-# 159 "CLex.fsl"
+# 157 "CLex.fsl"
                                      PLUS 
-# 362 "CLex.fs"
+# 360 "CLex.fs"
           )
   | 10 -> ( 
-# 161 "CLex.fsl"
+# 159 "CLex.fsl"
                                      MINUS 
-# 367 "CLex.fs"
+# 365 "CLex.fs"
           )
   | 11 -> ( 
-# 162 "CLex.fsl"
+# 160 "CLex.fsl"
                                      TIMES 
-# 372 "CLex.fs"
+# 370 "CLex.fs"
           )
   | 12 -> ( 
-# 163 "CLex.fsl"
+# 161 "CLex.fsl"
                                      DIV 
-# 377 "CLex.fs"
+# 375 "CLex.fs"
           )
   | 13 -> ( 
-# 164 "CLex.fsl"
+# 162 "CLex.fsl"
                                      SELFINC 
-# 382 "CLex.fs"
+# 380 "CLex.fs"
           )
   | 14 -> ( 
-# 165 "CLex.fsl"
+# 163 "CLex.fsl"
                                      SELFDEC 
-# 387 "CLex.fs"
+# 385 "CLex.fs"
           )
   | 15 -> ( 
-# 166 "CLex.fsl"
+# 164 "CLex.fsl"
                                      MOD 
-# 392 "CLex.fs"
+# 390 "CLex.fs"
           )
   | 16 -> ( 
-# 167 "CLex.fsl"
+# 165 "CLex.fsl"
                                      ASSIGN 
-# 397 "CLex.fs"
+# 395 "CLex.fs"
           )
   | 17 -> ( 
-# 168 "CLex.fsl"
+# 166 "CLex.fsl"
                                      EQ 
-# 402 "CLex.fs"
+# 400 "CLex.fs"
           )
   | 18 -> ( 
-# 169 "CLex.fsl"
+# 167 "CLex.fsl"
                                      NE 
-# 407 "CLex.fs"
+# 405 "CLex.fs"
           )
   | 19 -> ( 
-# 170 "CLex.fsl"
+# 168 "CLex.fsl"
                                      GT 
-# 412 "CLex.fs"
+# 410 "CLex.fs"
           )
   | 20 -> ( 
-# 171 "CLex.fsl"
+# 169 "CLex.fsl"
                                      LT 
-# 417 "CLex.fs"
+# 415 "CLex.fs"
           )
   | 21 -> ( 
-# 172 "CLex.fsl"
+# 170 "CLex.fsl"
                                      GE 
-# 422 "CLex.fs"
+# 420 "CLex.fs"
           )
   | 22 -> ( 
-# 173 "CLex.fsl"
+# 171 "CLex.fsl"
                                      LE 
-# 427 "CLex.fs"
+# 425 "CLex.fs"
           )
   | 23 -> ( 
-# 174 "CLex.fsl"
+# 172 "CLex.fsl"
                                      SEQOR 
-# 432 "CLex.fs"
+# 430 "CLex.fs"
           )
   | 24 -> ( 
-# 175 "CLex.fsl"
+# 173 "CLex.fsl"
                                      SEQAND 
-# 437 "CLex.fs"
+# 435 "CLex.fs"
           )
   | 25 -> ( 
-# 176 "CLex.fsl"
+# 174 "CLex.fsl"
                                      AMP 
-# 442 "CLex.fs"
+# 440 "CLex.fs"
           )
   | 26 -> ( 
-# 177 "CLex.fsl"
+# 175 "CLex.fsl"
                                      NOT 
-# 447 "CLex.fs"
+# 445 "CLex.fs"
           )
   | 27 -> ( 
-# 178 "CLex.fsl"
+# 176 "CLex.fsl"
                                      LPAR 
-# 452 "CLex.fs"
+# 450 "CLex.fs"
           )
   | 28 -> ( 
-# 179 "CLex.fsl"
+# 177 "CLex.fsl"
                                      RPAR 
-# 457 "CLex.fs"
+# 455 "CLex.fs"
           )
   | 29 -> ( 
-# 180 "CLex.fsl"
+# 178 "CLex.fsl"
                                      LBRACE 
-# 462 "CLex.fs"
+# 460 "CLex.fs"
           )
   | 30 -> ( 
-# 181 "CLex.fsl"
+# 179 "CLex.fsl"
                                      RBRACE 
-# 467 "CLex.fs"
+# 465 "CLex.fs"
           )
   | 31 -> ( 
-# 182 "CLex.fsl"
+# 180 "CLex.fsl"
                                      LBRACK 
-# 472 "CLex.fs"
+# 470 "CLex.fs"
           )
   | 32 -> ( 
-# 183 "CLex.fsl"
+# 181 "CLex.fsl"
                                      RBRACK 
-# 477 "CLex.fs"
+# 475 "CLex.fs"
           )
   | 33 -> ( 
-# 184 "CLex.fsl"
+# 182 "CLex.fsl"
                                      SEMI 
-# 482 "CLex.fs"
+# 480 "CLex.fs"
           )
   | 34 -> ( 
-# 185 "CLex.fsl"
+# 183 "CLex.fsl"
                                      COMMA 
-# 487 "CLex.fs"
+# 485 "CLex.fs"
           )
   | 35 -> ( 
-# 186 "CLex.fsl"
+# 184 "CLex.fsl"
                                      COLON 
-# 492 "CLex.fs"
+# 490 "CLex.fs"
           )
   | 36 -> ( 
-# 187 "CLex.fsl"
+# 185 "CLex.fsl"
                                      QUE 
-# 497 "CLex.fs"
+# 495 "CLex.fs"
           )
   | 37 -> ( 
-# 188 "CLex.fsl"
+# 186 "CLex.fsl"
                                      EndLineComment lexbuf; Token lexbuf 
-# 502 "CLex.fs"
+# 500 "CLex.fs"
           )
   | 38 -> ( 
-# 192 "CLex.fsl"
+# 190 "CLex.fsl"
                                      Comment lexbuf; Token lexbuf 
-# 507 "CLex.fs"
+# 505 "CLex.fs"
           )
   | 39 -> ( 
-# 193 "CLex.fsl"
+# 191 "CLex.fsl"
                                      Comment lexbuf; Token lexbuf 
-# 512 "CLex.fs"
+# 510 "CLex.fs"
           )
   | 40 -> ( 
-# 194 "CLex.fsl"
+# 192 "CLex.fsl"
                                      CSTSTRING (String [] lexbuf) 
-# 517 "CLex.fs"
+# 515 "CLex.fs"
           )
   | 41 -> ( 
-# 195 "CLex.fsl"
+# 193 "CLex.fsl"
                                      EOF 
-# 522 "CLex.fs"
+# 520 "CLex.fs"
           )
   | 42 -> ( 
-# 196 "CLex.fsl"
+# 194 "CLex.fsl"
                                      failwith "Lexer error: illegal symbol" 
-# 527 "CLex.fs"
+# 525 "CLex.fs"
           )
   | _ -> failwith "Token"
 // Rule Comment
 and Comment  lexbuf =
   match _fslex_tables.Interpret(16,lexbuf) with
   | 0 -> ( 
-# 199 "CLex.fsl"
+# 197 "CLex.fsl"
                                      Comment lexbuf; Comment lexbuf 
-# 536 "CLex.fs"
+# 534 "CLex.fs"
           )
   | 1 -> ( 
-# 200 "CLex.fsl"
+# 198 "CLex.fsl"
                                      () 
-# 541 "CLex.fs"
+# 539 "CLex.fs"
           )
   | 2 -> ( 
-# 201 "CLex.fsl"
+# 199 "CLex.fsl"
                                      Comment lexbuf; Comment lexbuf 
-# 546 "CLex.fs"
+# 544 "CLex.fs"
           )
   | 3 -> ( 
-# 202 "CLex.fsl"
+# 200 "CLex.fsl"
                                      () 
-# 551 "CLex.fs"
+# 549 "CLex.fs"
           )
   | 4 -> ( 
-# 203 "CLex.fsl"
+# 201 "CLex.fsl"
                                      lexbuf.EndPos <- lexbuf.EndPos.NextLine; Comment lexbuf 
-# 556 "CLex.fs"
+# 554 "CLex.fs"
           )
   | 5 -> ( 
-# 204 "CLex.fsl"
+# 202 "CLex.fsl"
                                      failwith "Lexer error: unterminated comment" 
-# 561 "CLex.fs"
+# 559 "CLex.fs"
           )
   | 6 -> ( 
-# 205 "CLex.fsl"
+# 203 "CLex.fsl"
                                      Comment lexbuf 
-# 566 "CLex.fs"
+# 564 "CLex.fs"
           )
   | _ -> failwith "Comment"
 // Rule EndLineComment
 and EndLineComment  lexbuf =
   match _fslex_tables.Interpret(11,lexbuf) with
   | 0 -> ( 
-# 208 "CLex.fsl"
+# 206 "CLex.fsl"
                                      lexbuf.EndPos <- lexbuf.EndPos.NextLine 
-# 575 "CLex.fs"
+# 573 "CLex.fs"
           )
   | 1 -> ( 
-# 209 "CLex.fsl"
+# 207 "CLex.fsl"
                                      () 
-# 580 "CLex.fs"
+# 578 "CLex.fs"
           )
   | 2 -> ( 
-# 210 "CLex.fsl"
+# 208 "CLex.fsl"
                                      EndLineComment lexbuf 
-# 585 "CLex.fs"
+# 583 "CLex.fs"
           )
   | _ -> failwith "EndLineComment"
 // Rule String
 and String chars lexbuf =
   match _fslex_tables.Interpret(0,lexbuf) with
   | 0 -> ( 
-# 214 "CLex.fsl"
+# 212 "CLex.fsl"
                        Microsoft.FSharp.Core.String.concat "" (List.map string (List.rev chars)) 
-# 594 "CLex.fs"
+# 592 "CLex.fs"
           )
   | 1 -> ( 
-# 219 "CLex.fsl"
+# 217 "CLex.fsl"
                        String (cEscape (lexemeAsString lexbuf) :: chars) lexbuf 
-# 599 "CLex.fs"
+# 597 "CLex.fs"
           )
   | 2 -> ( 
-# 221 "CLex.fsl"
+# 219 "CLex.fsl"
                        String ('\'' :: chars) lexbuf 
-# 604 "CLex.fs"
+# 602 "CLex.fs"
           )
   | 3 -> ( 
-# 223 "CLex.fsl"
+# 221 "CLex.fsl"
                        failwith "Lexer error: illegal escape sequence" 
-# 609 "CLex.fs"
+# 607 "CLex.fs"
           )
   | 4 -> ( 
-# 224 "CLex.fsl"
+# 222 "CLex.fsl"
                                           failwith "Lexer error: unterminated string" 
-# 614 "CLex.fs"
+# 612 "CLex.fs"
           )
   | 5 -> ( 
-# 227 "CLex.fsl"
+# 225 "CLex.fsl"
                                   failwith "Lexer error: newline in string" 
-# 619 "CLex.fs"
+# 617 "CLex.fs"
           )
   | 6 -> ( 
-# 230 "CLex.fsl"
+# 228 "CLex.fsl"
                        failwith "Lexer error: invalid character in string" 
-# 624 "CLex.fs"
+# 622 "CLex.fs"
           )
   | 7 -> ( 
-# 232 "CLex.fsl"
+# 230 "CLex.fsl"
                        String (char (lexbuf.LexemeChar 0) :: chars) lexbuf 
-# 629 "CLex.fs"
+# 627 "CLex.fs"
           )
   | _ -> failwith "String"
 

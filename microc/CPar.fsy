@@ -25,19 +25,19 @@ let nl = CstI 10 //  \n 的 ASCII 码
 %token SELFINC SELFDEC       //自增 自减
 %token EQ NE GT LT GE LE
 %token NOT SEQOR SEQAND
-%token LPAR RPAR LBRACE RBRACE LBRACK RBRACK SEMI COMMA ASSIGN AMP QUE COLON
-%token EOF
+%token LPAR RPAR LBRACE RBRACE LBRACK RBRACK SEMI COMMA ASSIGN AMP QUE COLON    //LPAR 左括号 RPAR 右括号  LBRACE 左花括号 RBRACE 右花括号 
+%token EOF                                                                      //SEMI 分号   COLON 冒号
 
 %right ASSIGN             /* lowest precedence */  // 最下面的优先级最高
 %nonassoc PRINT
-%right QUE COLON
-%left SEQOR
-%left SEQAND
+%right QUE COLON          //问号 冒号
+%left SEQOR               //逻辑或||
+%left SEQAND              //逻辑与&&
 %left EQ NE 
-%nonassoc GT LT GE LE
+%nonassoc GT LT GE LE     //大于 小于 大于等于 小于等于
 %left PLUS MINUS
 %left TIMES DIV MOD 
-%nonassoc NOT AMP SELFINC SELFDEC
+%nonassoc NOT AMP SELFINC SELFDEC //!取反 &取地址 自增 自减
 %nonassoc LBRACK          /* highest precedence  */
 
 %start Main            // 语法开始符号
@@ -134,16 +134,16 @@ Stmt:
   | StmtU                               { $1 }
 ;
 
-StmtM:  /* No unbalanced if-else */
-    Expr SEMI                           { Expr($1)             }
+StmtM:  /* No unbalanced if-else   数量不匹配的if-else   */  
+    Expr SEMI                           { Expr($1)             }    //SEMI 分号
   | RETURN SEMI                         { Return None          }
   | RETURN Expr SEMI                    { Return(Some($2))     }
   | Block                               { $1                   }
-  | IF LPAR Expr RPAR StmtM ELSE StmtM  { If($3, $5, $7)       }
+  | IF LPAR Expr RPAR StmtM ELSE StmtM  { If($3, $5, $7)       }    
   | WHILE LPAR Expr RPAR StmtM          { While($3, $5)        }
   | DO StmtM WHILE LPAR Expr RPAR SEMI  { DoWhile($2, $5)      }
   | DO StmtM UNTIL LPAR Expr RPAR SEMI  { DoUntil($2, $5)      }
-  | SWITCH LPAR Expr RPAR LBRACE StmtCase RBRACE        { Switch($3,$6)  }
+  | SWITCH LPAR Expr RPAR LBRACE StmtCase RBRACE        { Switch($3,$6)  }    
   | FOR LPAR Expr SEMI Expr SEMI Expr RPAR StmtM        { For($3,$5,$7,$9)  }
 ;
 

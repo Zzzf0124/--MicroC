@@ -28,6 +28,27 @@
 
    The store behaves as a stack, so all data except global variables
    are stack allocated: variables, function parameters and arrays.
+
+  值是整数；它可以表示整数或指针，
+  其中指针只是存储区中的地址（变量或
+  指针或数组的基址）。
+  编译时环境将全局变量映射到固定
+  存储地址，并将局部变量映射到
+  当前堆栈帧，相对于其底部。运行时存储
+  将位置映射为整数。这可以自由地允许指针
+  算术，如在real C中。编译时函数环境
+  将函数名映射到代码标签。在生成的代码中，
+  标签被绝对代码地址替换。
+  表达式可能有副作用。函数获取
+  类型化参数，并可以选择返回结果。
+  数组只能是一维且大小不变的。对于
+  简单起见，我们将数组表示为一个变量，该变量保存
+  第一个数组元素的地址。这与
+  在C中处理数组类型参数的方式，但不使用
+  处理数组类型变量。实际上，这就是
+  C）的前身表示数组变量。
+  存储行为类似于堆栈，因此除了全局变量之外的所有数据
+  是否分配堆栈：变量、函数参数和数组。
 *)
 
 module Comp
@@ -50,10 +71,10 @@ let rec lookup env x =
     | (y, v) :: yr -> if x = y then v else lookup yr x
 
 (* A global variable has an absolute address, a local one has an offset: *)
-
+(* 全局变量有绝对地址，局部变量有偏移量 *)
 type Var =
-    | Glovar of int (* absolute address in stack           *)
-    | Locvar of int (* address relative to bottom of frame *)
+    | Glovar of int (* absolute address in stack           堆栈中的绝对地址*)
+    | Locvar of int (* address relative to bottom of frame 相对于框架底部的地址*)
 
 (* The variable environment keeps track of global and local variables, and
    keeps track of next available offset for local variables 
@@ -81,6 +102,8 @@ type VarEnv = (Var * typ) Env * int
 type Paramdecs = (typ * string) list
 
 type FunEnv = (label * typ option * Paramdecs) Env
+
+type LabEnv = label list
 
 let isX86Instr = ref false
 
@@ -164,39 +187,68 @@ let x86patch code =
 (* ------------------------------------------------------------------- *)
 
 (* Compiling micro-C statements:
-   * stmt    is the statement to compile
-   * varenv  is the local and global variable environment
-   * funEnv  is the global function environment
+   * stmt    is the statement to compile                          stmt    是要编译的语句
+   * varenv  is the local and global variable environment         varenv  是局部变量环境和全局变量环境
+   * funEnv  is the global function environment                   funEnv  是全局函数环境
 *)
 
-let rec cStmt stmt (varEnv: VarEnv) (funEnv: FunEnv) : instr list =
+let rec cStmt stmt (varEnv: VarEnv) (funEnv: FunEnv) (lablist: LabEnv): instr list =
     match stmt with
     | If (e, stmt1, stmt2) ->
         let labelse = newLabel ()
         let labend = newLabel ()
 
-        cExpr e varEnv funEnv
+        cExpr e varEnv funEnv lablist
         @ [ IFZERO labelse ]
-          @ cStmt stmt1 varEnv funEnv
+          @ cStmt stmt1 varEnv funEnv lablist
             @ [ GOTO labend ]
               @ [ Label labelse ]
-                @ cStmt stmt2 varEnv funEnv @ [ Label labend ]
+                @ cStmt stmt2 varEnv funEnv lablist 
+                  @ [ Label labend ]
     | While (e, body) ->
         let labbegin = newLabel ()
         let labtest = newLabel ()
 
         [ GOTO labtest; Label labbegin ]
-        @ cStmt body varEnv funEnv
+        @ cStmt body varEnv funEnv lablist
           @ [ Label labtest ]
-            @ cExpr e varEnv funEnv @ [ IFNZRO labbegin ]
-    | Expr e -> cExpr e varEnv funEnv @ [ INCSP -1 ]
+            @ cExpr e varEnv funEnv lablist
+              @ [ IFNZRO labbegin ]
+
+    | DoWhile (body, e) ->
+        let labbegin = newLabel ()  //开始入口标签
+        let labtest = newLabel ()   //循环体标签
+        let labend = newLabel ()    //退出的标签
+        let lablist = labend :: labtest :: lablist  //把
+
+        [ Label labbegin ]      //begin开始
+        @ cStmt body varEnv funEnv lablist  //编译body语句，返回汇编指令列表
+          @ [ Label labtest ]               //test
+            @ cExpr e varEnv funEnv lablist //执行表达式
+              @ [ IFNZRO labbegin; Label labend ]     //如果条件！=0 继续循环   ||提交  end
+    | For (dec, e, op, body) ->
+        let labend = newLabel ()
+        let labbegin = newLabel ()
+        let labtest = newLabel ()
+        let lablist = labend :: labtest :: lablist
+
+        cExpr dec varEnv funEnv lablist
+        @ [ INCSP -1; Label labbegin ]
+          @ cStmt body varEnv funEnv lablist
+            @ [ Label labtest ]
+              @ cExpr op varEnv funEnv lablist
+                @ [ INCSP -1 ]
+                  @ cExpr e varEnv funEnv lablist
+                    @ [ IFNZRO labbegin ] @ [ Label labend ]
+    
+    | Expr e -> cExpr e varEnv funEnv lablist@ [ INCSP -1 ]
     | Block stmts ->
 
         let rec loop stmts varEnv =
             match stmts with
             | [] -> (snd varEnv, [])
             | s1 :: sr ->
-                let (varEnv1, code1) = cStmtOrDec s1 varEnv funEnv
+                let (varEnv1, code1) = cStmtOrDec s1 varEnv funEnv lablist
                 let (fdepthr, coder) = loop sr varEnv1
                 (fdepthr, code1 @ coder)
 
@@ -205,11 +257,11 @@ let rec cStmt stmt (varEnv: VarEnv) (funEnv: FunEnv) : instr list =
         code @ [ INCSP(snd varEnv - fdepthend) ]
 
     | Return None -> [ RET(snd varEnv - 1) ]
-    | Return (Some e) -> cExpr e varEnv funEnv @ [ RET(snd varEnv) ]
+    | Return (Some e) -> cExpr e varEnv funEnv lablist@ [ RET(snd varEnv) ]
 
-and cStmtOrDec stmtOrDec (varEnv: VarEnv) (funEnv: FunEnv) : VarEnv * instr list =
+and cStmtOrDec stmtOrDec (varEnv: VarEnv) (funEnv: FunEnv) (lablist: LabEnv): VarEnv * instr list =
     match stmtOrDec with
-    | Stmt stmt -> (varEnv, cStmt stmt varEnv funEnv)
+    | Stmt stmt -> (varEnv, cStmt stmt varEnv funEnv lablist)
     | Dec (typ, x) -> allocateWithMsg Locvar (typ, x) varEnv
 
 (* Compiling micro-C expressions:
@@ -224,24 +276,26 @@ and cStmtOrDec stmtOrDec (varEnv: VarEnv) (funEnv: FunEnv) : VarEnv * instr list
    stack top (and thus extend the current stack frame with one element).
 *)
 
-and cExpr (e: expr) (varEnv: VarEnv) (funEnv: FunEnv) : instr list =
+and cExpr (e: expr) (varEnv: VarEnv) (funEnv: FunEnv) (lablist: LabEnv) : instr list =
     match e with
-    | Access acc -> cAccess acc varEnv funEnv @ [ LDI ]
+    | Access acc -> cAccess acc varEnv funEnv lablist @[ LDI ]
     | Assign (acc, e) ->
-        cAccess acc varEnv funEnv
-        @ cExpr e varEnv funEnv @ [ STI ]
+        cAccess acc varEnv funEnv lablist
+        @ cExpr e varEnv funEnv lablist@ [ STI ]
     | CstI i -> [ CSTI i ]
-    | Addr acc -> cAccess acc varEnv funEnv
+    | CstF i -> [ CSTF(System.BitConverter.ToInt32(System.BitConverter.GetBytes(i), 0)) ]
+    | CstC i -> [ CSTC((int32) (System.BitConverter.ToInt16(System.BitConverter.GetBytes(char (i)), 0))) ]
+    | Addr acc -> cAccess acc varEnv funEnv lablist
     | Prim1 (ope, e1) ->
-        cExpr e1 varEnv funEnv
+        cExpr e1 varEnv funEnv lablist
         @ (match ope with
            | "!" -> [ NOT ]
            | "printi" -> [ PRINTI ]
            | "printc" -> [ PRINTC ]
            | _ -> raise (Failure "unknown primitive 1"))
     | Prim2 (ope, e1, e2) ->
-        cExpr e1 varEnv funEnv
-        @ cExpr e2 varEnv funEnv
+        cExpr e1 varEnv funEnv lablist
+        @ cExpr e2 varEnv funEnv lablist
           @ (match ope with
              | "*" -> [ MUL ]
              | "+" -> [ ADD ]
@@ -256,19 +310,30 @@ and cExpr (e: expr) (varEnv: VarEnv) (funEnv: FunEnv) : instr list =
              | "<=" -> [ SWAP; LT; NOT ]
              | _ -> raise (Failure "unknown primitive 2"))
     
-    
-    | PreInc acc -> cAccess acc varEnv funEnv @ [ DUP; LDI; CSTI 1; ADD; STI ]//前置自增
-    | PreDec acc -> cAccess acc varEnv funEnv @ [ DUP; LDI; CSTI 1; SUB; STI ]//前置自减
-    | PostInc acc -> cAccess acc varEnv funEnv @ [ DUP; LDI; SWAP; DUP; LDI; CSTI 1; ADD; STI ; INCSP -1]//后置自增
-    | PostDec acc -> cAccess acc varEnv funEnv @ [ DUP; LDI; SWAP; DUP; LDI; CSTI 1; SUB; STI ; INCSP -1]//后置自减
+    //前置自增
+    | PreInc acc -> 
+        cAccess acc varEnv funEnv lablist
+          @ [ DUP; LDI; CSTI 1; ADD; STI ]
+    //前置自减
+    | PreDec acc -> 
+        cAccess acc varEnv funEnv  lablist
+          @ [ DUP; LDI; CSTI 1; SUB; STI ]
+    //后置自增
+    | PostInc acc -> 
+        cAccess acc varEnv funEnv lablist
+          @ [ DUP; LDI; SWAP; DUP; LDI; CSTI 1; ADD; STI ; INCSP -1]
+    //后置自减
+    | PostDec acc -> 
+        cAccess acc varEnv funEnv lablist
+          @ [ DUP; LDI; SWAP; DUP; LDI; CSTI 1; SUB; STI ; INCSP -1]
     
     | Andalso (e1, e2) ->
         let labend = newLabel ()
         let labfalse = newLabel ()
 
-        cExpr e1 varEnv funEnv
+        cExpr e1 varEnv funEnv lablist
         @ [ IFZERO labfalse ]
-          @ cExpr e2 varEnv funEnv
+          @ cExpr e2 varEnv funEnv lablist
             @ [ GOTO labend
                 Label labfalse
                 CSTI 0
@@ -277,19 +342,19 @@ and cExpr (e: expr) (varEnv: VarEnv) (funEnv: FunEnv) : instr list =
         let labend = newLabel ()
         let labtrue = newLabel ()
 
-        cExpr e1 varEnv funEnv
+        cExpr e1 varEnv funEnv lablist
         @ [ IFNZRO labtrue ]
-          @ cExpr e2 varEnv funEnv
+          @ cExpr e2 varEnv funEnv lablist
             @ [ GOTO labend
                 Label labtrue
                 CSTI 1
                 Label labend ]
-    | Call (f, es) -> callfun f es varEnv funEnv
+    | Call (f, es) -> callfun f es varEnv funEnv 
 
 (* Generate code to access variable, dereference pointer or index array.
    The effect of the compiled code is to leave an lvalue on the stack.   *)
 
-and cAccess access varEnv funEnv : instr list =
+and cAccess access varEnv funEnv lablist: instr list =
     match access with
     | AccVar x ->
         match lookup (fst varEnv) x with
@@ -304,20 +369,20 @@ and cAccess access varEnv funEnv : instr list =
         | Locvar addr, _ -> [ GETBP; OFFSET addr; ADD ]
     | AccDeref e ->
         match e with
-        | Access _ -> (cExpr e varEnv funEnv)
-        | Addr _ -> (cExpr e varEnv funEnv)
+        | Access _ -> (cExpr e varEnv funEnv lablist)
+        | Addr _ -> (cExpr e varEnv funEnv lablist)
         | _ ->
             printfn "WARN: x86 pointer arithmetic not support!"
-            (cExpr e varEnv funEnv)
+            (cExpr e varEnv funEnv lablist)
     | AccIndex (acc, idx) ->
-        cAccess acc varEnv funEnv
+        cAccess acc varEnv funEnv lablist
         @ [ LDI ]
-          @ x86patch (cExpr idx varEnv funEnv) @ [ ADD ]
+          @ x86patch (cExpr idx varEnv funEnv lablist) @ [ ADD ]
 
 (* Generate code to evaluate a list es of expressions: *)
 
 and cExprs es varEnv funEnv : instr list =
-    List.concat (List.map (fun e -> cExpr e varEnv funEnv) es)
+    List.concat (List.map (fun e -> cExpr e varEnv funEnv []) es)
 
 (* Generate code to evaluate arguments es and then call function f: *)
 
@@ -342,7 +407,7 @@ let cProgram (Prog topdecs) : instr list =
         let (labf, _, paras) = lookup funEnv f
         let paraNums = List.length paras
         let (envf, fdepthf) = bindParams paras (globalVarEnv, 0)
-        let code = cStmt body (envf, fdepthf) funEnv
+        let code = cStmt body (envf, fdepthf) funEnv []
 
         [ FLabel (paraNums, labf) ]
         @ code @ [ RET(paraNums - 1) ]

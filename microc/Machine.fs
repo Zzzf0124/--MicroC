@@ -17,7 +17,9 @@ type instr =
   | Label of label                     (* symbolic label; pseudo-instruc. *)
   | FLabel of int * label                     (* symbolic label; pseudo-instruc. *)
   | CSTI of int                        (* constant                        *)
-  | OFFSET of int                        (* constant     偏移地址  x86     *) 
+  | CSTF of int
+  | CSTC of int
+  | OFFSET of int                      (* constant     偏移地址  x86       *) 
   | GVAR of int                        (* global var     全局变量  x86     *) 
   | ADD                                (* addition                        *)
   | SUB                                (* subtraction                     *)
@@ -33,7 +35,7 @@ type instr =
   | STI                                (* set s[s[sp-1]]                  *)
   | GETBP                              (* get bp                          *)
   | GETSP                              (* get sp                          *)
-  | INCSP of int                       (* increase stack top by m         *)
+  | INCSP of int                       (* increase stack top by m           将堆栈顶部增加m*)
   | GOTO of label                      (* go to label                     *)
   | IFZERO of label                    (* go to label if s[sp] == 0       *)
   | IFNZRO of label                    (* go to label if s[sp] != 0       *)
@@ -42,7 +44,7 @@ type instr =
   | RET of int                         (* pop m and return to s[sp]       *)
   | PRINTI                             (* print s[sp] as integer          *)
   | PRINTC                             (* print s[sp] as character        *)
-  | LDARGS of int                             (* load command line args on stack *)
+  | LDARGS of int                      (* load command line args on stack   在堆栈上加载命令行参数*)
   | STOP                               (* halt the abstract machine       *)
 
 (* Generate new distinct labels *)
@@ -170,7 +172,11 @@ let CODELDARGS = 24
 [<Literal>]
 let CODESTOP   = 25;
 
+[<Literal>]
+let CODECSTF   = 26
 
+[<Literal>]
+let CODECSTC    = 27;
 
 (* Bytecode emission, first pass: build environment that maps 
    each label to an integer address in the bytecode.
@@ -182,6 +188,8 @@ let makelabenv (addr, labenv) instr =
     | Label lab      -> (addr, (lab, addr) :: labenv)
     | FLabel (m,lab)      -> (addr, (lab, addr) :: labenv)
     | CSTI i         -> (addr+2, labenv)
+    | CSTF i         -> (addr+2, labenv)
+    | CSTC i         -> (addr+2, labenv)
     | GVAR i         -> (addr+2, labenv)
     | OFFSET i       -> (addr+2, labenv)
     | ADD            -> (addr+1, labenv)
@@ -220,6 +228,8 @@ let rec emitints getlab instr ints =
     | Label lab      -> ints
     | FLabel (m,lab) -> ints
     | CSTI i         -> CODECSTI   :: i :: ints
+    | CSTF i         -> CODECSTF   :: i :: ints
+    | CSTC i         -> CODECSTC   :: i :: ints
     | GVAR i         -> CODECSTI   :: i :: ints
     | OFFSET i       -> CODECSTI   :: i :: ints
     | ADD            -> CODEADD    :: ints
@@ -304,6 +314,7 @@ let rec decomp ints : instr list =
     | CODEPRINTC :: ints_rest                         ->   PRINTC        :: decomp ints_rest
     | CODELDARGS :: ints_rest                         ->   LDARGS 0       :: decomp ints_rest
     | CODESTOP   :: ints_rest                         ->   STOP             :: decomp ints_rest
-    | CODECSTI   :: i :: ints_rest                    ->   CSTI i :: decomp ints_rest       
+    | CODECSTI   :: i :: ints_rest                    ->   CSTI i :: decomp ints_rest
+    | CODECSTF   :: i :: ints_rest                    ->   CSTF i :: decomp ints_rest          
     | _                                       ->    printf "%A" ints; failwith "unknow code"
 

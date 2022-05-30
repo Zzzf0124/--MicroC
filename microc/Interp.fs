@@ -147,7 +147,7 @@ n = 8;
 }
 上面c程序的解释环境如下：
 
- 环境：locEnv:
+环境：locEnv:
     ([(n, 5); (n, 4); (g, 0)], 6)
 
 存储：store:
@@ -198,6 +198,10 @@ let rec bindVars xs vs locEnv store : locEnv * store =
 (* Allocate variable (int or pointer or array): extend environment so
    that it maps variable to next available store location, and
    initialize store location(s).
+
+    分配变量（int、指针或数组）：扩展环境以便
+    它将变量映射到下一个可用的存储位置，以及
+    初始化存储位置。
  *)
 //
 
@@ -271,7 +275,7 @@ let rec exec stmt (locEnv: locEnv) (gloEnv: gloEnv) (store: store) : store =
         loop store
 
     | DoWhile(body,e) -> 
-        let rec loop store1 =
+        let rec loop store1 =                         //loop函数
                 //求值 循环条件,注意变更环境 store
             let (v, store2) = eval e locEnv gloEnv  store1
                 // 继续循环

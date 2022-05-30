@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\大三\\编译原理\\大作业\\ZZF-MicroC\\microc\\interpc.fsproj": {}
+    "d:\\大三\\编译原理\\大作业\\ZZF-MicroC\\microc\\interpc.fsproj": {}
   },
   "projects": {
-    "D:\\大三\\编译原理\\大作业\\ZZF-MicroC\\microc\\interpc.fsproj": {
+    "d:\\大三\\编译原理\\大作业\\ZZF-MicroC\\microc\\interpc.fsproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\大三\\编译原理\\大作业\\ZZF-MicroC\\microc\\interpc.fsproj",
+        "projectUniqueName": "d:\\大三\\编译原理\\大作业\\ZZF-MicroC\\microc\\interpc.fsproj",
         "projectName": "interpc",
-        "projectPath": "D:\\大三\\编译原理\\大作业\\ZZF-MicroC\\microc\\interpc.fsproj",
+        "projectPath": "d:\\大三\\编译原理\\大作业\\ZZF-MicroC\\microc\\interpc.fsproj",
         "packagesPath": "C:\\Users\\张泽峰\\.nuget\\packages\\",
-        "outputPath": "D:\\大三\\编译原理\\大作业\\ZZF-MicroC\\microc\\obj\\",
+        "outputPath": "d:\\大三\\编译原理\\大作业\\ZZF-MicroC\\microc\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\张泽峰\\AppData\\Roaming\\NuGet\\NuGet.Config"

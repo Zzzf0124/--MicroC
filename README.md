@@ -39,19 +39,18 @@
 |               新增类型 char               |   5    |              支持char类型的识别与输出              |
 |               新增类型 bool               |   5    |        支持bool类型(false\true)的定义与输出        |
 
-|        编译器         | 完善程度 |                备注                 |
-| :-------------------: | :------: | :---------------------------------: |
-|       char类型        |    5     |                                     |
-|       float类型       |    5     |                                     |
-|     do-until循环      |    5     |                                     |
-|     do-while循环      |    5     |                                     |
-| switch  case  default |    5     |                                     |
-|        for循环        |    5     |                                     |
-|     数据初值定义      |    3     |      不支持数组和结构体的初值       |
-|       三目运算        |    5     |                                     |
-|      += 等语法糖      |    5     |                                     |
-|   自增自减（++/--)    |    3     | 可以识别 ++i 和 i++，但是返回值不对 |
-|    修改Java虚拟机     |    5     |    支出了一条新的指令输出浮点数     |
+|        编译器         | 完善程度 |             备注             |
+| :-------------------: | :------: | :--------------------------: |
+|       char类型        |    5     |                              |
+|       float类型       |    5     |                              |
+|     do-until循环      |    5     |                              |
+|     do-while循环      |    5     |                              |
+| switch  case  default |    5     |                              |
+|        for循环        |    5     |                              |
+|       三目运算        |    5     |                              |
+|      += 等语法糖      |    5     |                              |
+|   自增自减（++/--)    |    5     |                              |
+|    修改Java虚拟机     |    5     | 支出了一条新的指令输出浮点数 |
 
 ## 三、项目说明
 
@@ -112,6 +111,7 @@
   dotnet build microc.fsproj #构建./bin/Debug/net6.0/microc.exe
   	
   dotnet run --project microc.fsproj zzf_program/test-float.c  #执行编译器，编译.c文件，并输出 .out文件
+  java Machine 测试的文件（.out)  参数 
   java Machinetrace zzf_program/test-float.out 0 #追踪查看运行栈
   ```
 
@@ -534,10 +534,158 @@ Clex.fs
 
 ### 编译器
 
-（1）在Absyn.fs中定义抽象语法（解释器已完成）
+```sh
+javac Machine.java#生成java虚拟机
+dotnet restore microc.fsproj #可选
+dotnet clean microc.fsproj #可选
+dotnet build microc.fsproj #构建./bin/Debug/net6.0/microc.exe
+	
+dotnet run --project microc.fsproj zzf_program/test-float.c  #执行编译器，编译.c文件，并输出 .out文件
+java Machine zzf_program_out/test-dowhile.out测试的文件（.out)  参数 
+java Machinetrace zzf_program_out/test-float.out 0 #追踪查看运行栈
+```
 
-（2）若需要添加汇编指令，在Machine.c中添加
+#### （一）dowhile
 
-（3）在Comp.fs中添加相应的实现
+- 编译器
 
-（一）
+  ```fsharp
+  | DoWhile (body, e) ->
+          let labbegin = newLabel ()  //开始入口标签
+          let labtest = newLabel ()   //循环体标签
+          let labend = newLabel ()    //退出的标签
+          let lablist = labend :: labtest :: lablist  //把
+  
+          [ Label labbegin ]      //begin开始
+          @ cStmt body varEnv funEnv lablist  //编译body语句，返回汇编指令列表
+            @ [ Label labtest ]               //test
+              @ cExpr e varEnv funEnv lablist //执行表达式
+                @ [ IFNZRO labbegin; Label labend ]     //如果条件！=0 继续循环   ||提交  end
+  ```
+
+- 运行示例
+
+  ```c
+  void main(){
+      int n;
+      n = 0;
+      do
+      {
+          print n;
+          n++;
+      } while (n < 1);
+  }
+  ```
+
+  编译运行out文件
+
+  ![image-20220530141300791](README.assets/image-20220530141300791.png)
+
+  编译成out后，查看追踪栈：
+
+  <img src="README.assets/image-20220530134914569.png" alt="image-20220530134914569" style="zoom: 67%;" />
+
+<img src="README.assets/image-20220530134936632.png" alt="image-20220530134936632" style="zoom: 80%;" />
+
+#### （二）for循环
+
+- 编译器
+
+  ```fsharp
+  | For (dec, e, op, body) ->
+          let labend = newLabel ()
+          let labbegin = newLabel ()
+          let labtest = newLabel ()
+          let lablist = labend :: labtest :: lablist
+  
+          cExpr dec varEnv funEnv lablist
+          @ [ INCSP -1; Label labbegin ]
+            @ cStmt body varEnv funEnv lablist
+              @ [ Label labtest ]
+                @ cExpr op varEnv funEnv lablist
+                  @ [ INCSP -1 ]
+                    @ cExpr e varEnv funEnv lablist
+                      @ [ IFNZRO labbegin ] @ [ Label labend ]
+  ```
+
+- 运行示例
+
+  ```c
+  void main(){
+    int a;
+    a = 0;
+    for(a;a <= 3;a++){
+      print a;
+    }
+  }
+  ```
+
+  编译运行out文件
+
+  ![image-20220530141626550](README.assets/image-20220530141626550-16538915515472.png)
+
+  <img src="README.assets/image-20220530141820698.png" alt="image-20220530141820698" style="zoom: 67%;" />
+
+  
+
+#### （三）自增自减
+
+- 编译器
+
+  ```fsharp
+      //前置自增
+      | PreInc acc -> 
+          cAccess acc varEnv funEnv lablist
+            @ [ DUP; LDI; CSTI 1; ADD; STI ]
+      //前置自减
+      | PreDec acc -> 
+          cAccess acc varEnv funEnv  lablist
+            @ [ DUP; LDI; CSTI 1; SUB; STI ]
+      //后置自增
+      | PostInc acc -> 
+          cAccess acc varEnv funEnv lablist
+            @ [ DUP; LDI; SWAP; DUP; LDI; CSTI 1; ADD; STI ; INCSP -1]
+      //后置自减
+      | PostDec acc -> 
+          cAccess acc varEnv funEnv lablist
+            @ [ DUP; LDI; SWAP; DUP; LDI; CSTI 1; SUB; STI ; INCSP -1]
+  ```
+
+- 运行示例
+
+  ```c
+  void main(){
+      int a;
+      a = 3;
+      print a++;
+      a = 3;
+      print ++a;
+  
+      a = 3;
+      print a--;
+      a = 3;
+      print --a;
+  }
+  ```
+
+  编译运行.out文件
+
+  ![image-20220530143759960](README.assets/image-20220530143759960.png)
+
+  
+
+
+
+## 五、心得体会
+
+- **项目总结**
+
+  ​		microc的改进大作业由于难度大，我计划打算放在所有大作业最后动手，所以开始的时间已经是5月24日，由于欠缺f#相关知识储备，我在一开始阅读代码的时候感到非常的难受，代码段读不懂意思，也很难理解解释器，编译器的运行逻辑。在去复习了f#相关的知识，反复阅读microc的readme，且向同学不断取经学习之后，我花了足足5天的时间把解释器的逻辑大致理解，并且完善了部分功能。之后几天又通读编译器部分的代码，理解并实现了简单的几个功能。总体做下来，我扪心自问如果没有参考的示例代码和上一届学长的相助，我很难独自一人走完整个流程。对我来说，解释器比编译器好理解很多，完善的可操作性也高不少。
+
+  ​		通过这一段时间夜以继日地忙活，我算是对整个编译器有了一些浅薄的理解，还需要后续的继续深入学习。但是不得不说，编译原理这门课是我大学以来最难的一门课，除了f#语言颠覆了我对c、java语言的运用理解之外，最后整个microC大作业也让我非常煎熬，一开始根本不知道该怎么做，哪怕是读了代码理解了运行逻辑之后，对于功能的完善也很难跨出第一步。
+
+- **课程建议**
+
+  ​		我个人感觉最后大作业的难度完全是基于对f#语言的理解掌握程度，所以希望老师平时上课的时候能够多讲讲f#的例题、每周的作业。
+
+  ​		如果能适当降低大作业难度那就更好了。

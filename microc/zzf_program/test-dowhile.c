@@ -5,5 +5,5 @@ void main(){
     {
         print n;
         n++;
-    } while (n < 1);
+    } while (n < 3);
 }

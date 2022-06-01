@@ -31,19 +31,20 @@
 | 字符串常量 单引号' ' 双引号 "" 三引号 ''' |   4    |                   没有实现三引号                   |
 | 数值常量 0b0101， 八进制0o777 十六0xFFDA  |   5    | 给定二进制、八进制、十六进制数，转化为对应的十进制 |
 |            switch case default            |   4    |                 只实现了int类型的                  |
-|                  for循环                  |   5    |                    实现for循环                     |
-|                 while循环                 |   5    |                   实现while循环                    |
-|               do-while循环                |   5    |                  实现do-while循环                  |
-|               do-until循环                |   5    |                  实现do-until循环                  |
-|              新增类型 float               |   5    |             支持float类型的识别与输出              |
-|               新增类型 char               |   5    |              支持char类型的识别与输出              |
-|               新增类型 bool               |   5    |        支持bool类型(false\true)的定义与输出        |
+|                  for循环                  |   4    |                    实现for循环                     |
+|                 while循环                 |   4    |                   实现while循环                    |
+|               do-while循环                |   4    |                  实现do-while循环                  |
+|               do-until循环                |   4    |                  实现do-until循环                  |
+|              新增类型 float               |   4    |             支持float类型的识别与输出              |
+|               新增类型 char               |   4    |              支持char类型的识别与输出              |
+|               新增类型 bool               |   4    |        支持bool类型(false\true)的定义与输出        |
 
-|      编译器      | 完善程度 | 备注 |
-| :--------------: | :------: | :--: |
-|   do-while循环   |    5     |      |
-|     for循环      |    5     |      |
-| 自增自减（++/--) |    5     |      |
+|      编译器      | 完善程度 |                   备注                    |
+| :--------------: | :------: | :---------------------------------------: |
+|   do-while循环   |    4     |                                           |
+|     for循环      |    4     |                                           |
+| 自增自减（++/--) |    5     |                                           |
+|   switch-case    |    2     | 简单的int类型匹配，没有实现break，default |
 
 ## 三、项目说明
 
@@ -669,7 +670,52 @@ java Machinetrace zzf_program_out/test-float.out 0 #追踪查看运行栈
 
   
 
+#### （四）switch-case
 
+- 编译器
+
+  ```fsharp
+  | Switch (e, cases) ->
+              let labend = newLabel ()
+              let lablist = labend :: lablist
+  
+              let rec parsecase c =
+                  | Case (cond, body) :: tr ->
+                      let (labnext, labnextbody, code) = parsecase tr
+                      let lab1 = newLabel ()
+                      let lab2 = newLabel ()
+                      (lab1,lab2,
+                      [ Label lab1 ]
+                      @ cExpr (Prim2("==", e, cond)) varEnv funEnv lablist
+                        @ [ IFZERO labnext ]
+                          @ [ Label lab2 ]
+                            @ cStmt body varEnv funEnv lablist
+                              @ [ GOTO labnextbody ] @ code)
+  
+                  | [] -> (labend, labend, [])
+  
+              let (lab1, lab2, code) = parsecase cases
+              code @ [ Label labend ]
+  ```
+
+- 运行示例
+
+  ```c
+  void main(int n){
+    int a;
+    a=1;
+    int b;
+    b=2;
+    switch (n){
+      case 1:
+        print a;
+      case 2:
+        print b;
+    }
+  }
+  ```
+
+  <img src="README.assets/image-20220601092550575.png" alt="image-20220601092550575" style="zoom: 67%;" />
 
 ## 五、心得体会
 

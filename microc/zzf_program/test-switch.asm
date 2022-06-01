@@ -16,7 +16,7 @@ asm_main:
 	;check arg count:
 	sub rsp, 24
 	mov rdx, rcx
-	mov rcx, 0
+	mov rcx, 1
 	call checkargc
 	add rsp, 24
 	pop rcx
@@ -34,8 +34,8 @@ _args_next:
 	sub rcx, 1
 	jmp _args_next      ;repeat until --ecx == 0
 _args_end:
-	lea rbp, [rsp--1*8]  ; make rbp point to first arg
-	;CALL 0,L1_main
+	lea rbp, [rsp-0*8]  ; make rbp point to first arg
+	;CALL 1,L1_main
 	push rbp 
 	call near L1_main
 	push rbx
@@ -51,7 +51,7 @@ L1_main:
 	sub rsp, 16     ; make space for svm r,bp 
 	mov rsi, rsp 
 	mov rbp, rsp 
-	add rbp, 0	   ; 8*arity 
+	add rbp, 8	   ; 8*arity 
 
 _L1_main_pro_1:	  ; slide 2 stack slot
 	cmp rbp, rsi      
@@ -69,15 +69,35 @@ _L1_main_pro_2:
 	lea rsp, [rsp-8*(1)]
 	;GETBP
 	push rbp
-	;OFFSET 0
-	push -0
+	;OFFSET 1
+	push -8
 	;ADD
 	pop rax
 	pop r10
 	add rax, r10
 	push rax
-	;CSTI 0
-	push 0
+	;CSTI 1
+	push 1
+	;STI
+	pop r10
+	pop rax
+	mov [rax],r10
+	push r10
+	;INCSP -1
+	lea rsp, [rsp-8*(-1)]
+	;INCSP 1
+	lea rsp, [rsp-8*(1)]
+	;GETBP
+	push rbp
+	;OFFSET 2
+	push -16
+	;ADD
+	pop rax
+	pop r10
+	add rax, r10
+	push rax
+	;CSTI 2
+	push 2
 	;STI
 	pop r10
 	pop rax
@@ -98,14 +118,30 @@ _L1_main_pro_2:
 	pop rax
 	mov rax,[rax]
 	push rax
-	;INCSP -1
-	lea rsp, [rsp-8*(-1)]
-	
-L3:
+	;DUP
+	pop rax
+	push rax
+	push rax
+	;CSTI 1
+	push 1
+	;EQ
+	pop rax
+	pop r10
+	cmp rax, r10
+	jne .Lasm0
+	push 1
+	jmp .Lasm1
+.Lasm0:
+	push 0
+.Lasm1:
+	;IFZERO L2
+	pop rax
+	cmp rax,0
+	je L2
 	;GETBP
 	push rbp
-	;OFFSET 0
-	push -0
+	;OFFSET 1
+	push -8
 	;ADD
 	pop rax
 	pop r10
@@ -123,101 +159,66 @@ L3:
 	add rsp, 16
 	;INCSP -1
 	lea rsp, [rsp-8*(-1)]
-	;INCSP 0
-	lea rsp, [rsp-8*(0)]
-	
-L4:
-	;GETBP
-	push rbp
-	;OFFSET 0
-	push -0
-	;ADD
-	pop rax
-	pop r10
-	add rax, r10
-	push rax
-	;DUP
-	pop rax
-	push rax
-	push rax
-	;LDI
-	pop rax
-	mov rax,[rax]
-	push rax
-	;SWAP
-	pop rax
-	pop r10
-	push rax
-	push r10
-	;DUP
-	pop rax
-	push rax
-	push rax
-	;LDI
-	pop rax
-	mov rax,[rax]
-	push rax
-	;CSTI 1
-	push 1
-	;ADD
-	pop rax
-	pop r10
-	add rax, r10
-	push rax
-	;STI
-	pop r10
-	pop rax
-	mov [rax],r10
-	push r10
-	;INCSP -1
-	lea rsp, [rsp-8*(-1)]
-	;INCSP -1
-	lea rsp, [rsp-8*(-1)]
-	;GETBP
-	push rbp
-	;OFFSET 0
-	push -0
-	;ADD
-	pop rax
-	pop r10
-	add rax, r10
-	push rax
-	;LDI
-	pop rax
-	mov rax,[rax]
-	push rax
-	;CSTI 3
-	push 3
-	;SWAP
-	pop rax
-	pop r10
-	push rax
-	push r10
-	;LT
-	pop rax
-	pop r10
-	cmp r10, rax
-	jl .Lasm0
-	push 0
-	jmp .Lasm1
-.Lasm0:
-	push 1
-.Lasm1:
-	;NOT
-	pop rax
-	xor rax, 1
-	push rax
-	;IFNZRO L3
-	pop rax
-	cmp rax,0
-	jne L3
+	;GOTO L3
+	jmp L3
 	
 L2:
+	;DUP
+	pop rax
+	push rax
+	push rax
+	;CSTI 2
+	push 2
+	;EQ
+	pop rax
+	pop r10
+	cmp rax, r10
+	jne .Lasm2
+	push 1
+	jmp .Lasm3
+.Lasm2:
+	push 0
+.Lasm3:
+	;IFZERO L4
+	pop rax
+	cmp rax,0
+	je L4
+	;GETBP
+	push rbp
+	;OFFSET 2
+	push -16
+	;ADD
+	pop rax
+	pop r10
+	add rax, r10
+	push rax
+	;LDI
+	pop rax
+	mov rax,[rax]
+	push rax
+	;PRINTI
+	pop rcx
+	push rcx
+	sub rsp, 16
+	call printi
+	add rsp, 16
 	;INCSP -1
 	lea rsp, [rsp-8*(-1)]
-	;RET -1
+	;GOTO L5
+	jmp L5
+	
+L4:
+	
+L5:
+	
+L3:
+	;INCSP -1
+	lea rsp, [rsp-8*(-1)]
+	;INCSP -2
+	lea rsp, [rsp-8*(-2)]
+	;RET 0
 	pop rbx
-	add rsp, 8*-1
+	add rsp, 8*0
 	pop rbp
 	ret
 	

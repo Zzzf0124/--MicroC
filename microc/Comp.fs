@@ -107,6 +107,8 @@ type LabEnv = label list
 
 let isX86Instr = ref false
 
+
+
 (* Bind declared variable in env and generate code to allocate it: *)
 // kind : Glovar / Locvar
 let rec allocateWithMsg (kind: int -> Var) (typ, x) (varEnv: VarEnv) =
@@ -216,66 +218,51 @@ let rec cStmt stmt (varEnv: VarEnv) (funEnv: FunEnv) (lablist: LabEnv): instr li
               @ [ IFNZRO labbegin ]
 
     | DoWhile (body, e) ->
-        let labbegin = newLabel ()  //开始入口标签
+        let labbegin = newLabel ()  
         let labtest = newLabel ()   //循环体标签
-        let labend = newLabel ()    //退出的标签
-        let lablist = labend :: labtest :: lablist  //把
+        let labend = newLabel ()    
+        let lablist = labend :: labtest :: lablist  
 
         [ Label labbegin ]      //begin开始
-        @ cStmt body varEnv funEnv lablist  //编译body语句，返回汇编指令列表
-          @ [ Label labtest ]               //test
-            @ cExpr e varEnv funEnv lablist //执行表达式
-              @ [ IFNZRO labbegin; Label labend ]     //如果条件！=0 继续循环   ||提交  end
+        @ cStmt body varEnv funEnv lablist    //编译body语句，返回汇编指令列表
+          @ [ Label labtest ]               
+            @ cExpr e varEnv funEnv lablist   //执行表达式
+              @ [ IFNZRO labbegin; Label labend ]      //如果条件！=0 继续循环   ||提交  end
+    
     | For (dec, e, op, body) ->
         let labend = newLabel ()
         let labbegin = newLabel ()
-        let labtest = newLabel ()
+        let labtest = newLabel ()                     //for循环体
         let lablist = labend :: labtest :: lablist
 
-        cExpr dec varEnv funEnv lablist
+        cExpr dec varEnv funEnv lablist      //编译初始化表达式
         @ [ INCSP -1; Label labbegin ]
-          @ cStmt body varEnv funEnv lablist
+          @ cStmt body varEnv funEnv lablist //编译循环体
             @ [ Label labtest ]
-              @ cExpr op varEnv funEnv lablist
+              @ cExpr op varEnv funEnv lablist  //编译末尾循环体
                 @ [ INCSP -1 ]
-                  @ cExpr e varEnv funEnv lablist
+                  @ cExpr e varEnv funEnv lablist //编译循环条件
                     @ [ IFNZRO labbegin ] @ [ Label labend ]
     
-    | Switch (e, cases) ->
-            let labend = newLabel ()
-            let lablist = labend :: lablist
+    | Switch (e, stmt1) ->                               
+        let rec cases stmt1 =                            
+            match stmt1 with
+            | Case(e2, stmt2) :: stmts -> 
+                let labend = newLabel () 
+                let labnext = newLabel () 
+                [ DUP ]                                 
+                @cExpr e2 varEnv funEnv lablist           //编译case表达式
+                  @ [ EQ ]                                         //判断switch匹配值和case是否相同
+                    @ [ IFZERO labend ]                             //不相等跳转end
+                      @ cStmt stmt2 varEnv funEnv lablist   //编译case后的执行语句
+                        @ [ GOTO labnext; Label labend ]          
+                          @ cases stmts                             //编译剩下的case
+                            @ [ Label labnext ]
+            | _ -> []                                               //匹配失败
 
-            let rec parsecase c =
-                match c with
-                | [ Case (cond, body) ] ->
-                    let lab1 = newLabel ()
-                    let lab2 = newLabel ()
-
-                    (lab1,
-                    lab2,
-                    [ Label lab1 ]
-                    @ cExpr (Prim2("==", e, cond)) varEnv funEnv lablist
-                      @ [ IFZERO labend ]
-                        @ [ Label lab2 ] @ cStmt body varEnv funEnv lablist)
-                | Case (cond, body) :: tr ->
-                    let (labnext, labnextbody, code) = parsecase tr
-                    let lab1 = newLabel ()
-                    let lab2 = newLabel ()
-                    // printf "\nlabnext: %A\nlabnextBody: %A \n" labnext labnextbody
-
-                    (lab1,
-                    lab2,
-                    [ Label lab1 ]
-                    @ cExpr (Prim2("==", e, cond)) varEnv funEnv lablist
-                      @ [ IFZERO labnext ]
-                        @ [ Label lab2 ]
-                          @ cStmt body varEnv funEnv lablist
-                            @ [ GOTO labnextbody ] @ code)
-
-                | [] -> (labend, labend, [])
-
-            let (lab1, lab2, code) = parsecase cases
-            code @ [ Label labend ]
+        cExpr e varEnv funEnv lablist                       //编译switch表达式
+        @ cases stmt1
+          @ [ INCSP -1 ]
 
     | Expr e -> cExpr e varEnv funEnv lablist@ [ INCSP -1 ]
     | Block stmts ->
@@ -291,7 +278,7 @@ let rec cStmt stmt (varEnv: VarEnv) (funEnv: FunEnv) (lablist: LabEnv): instr li
         let (fdepthend, code) = loop stmts varEnv
 
         code @ [ INCSP(snd varEnv - fdepthend) ]
-
+    
     | Return None -> [ RET(snd varEnv - 1) ]
     | Return (Some e) -> cExpr e varEnv funEnv lablist@ [ RET(snd varEnv) ]
 

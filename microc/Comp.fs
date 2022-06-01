@@ -241,6 +241,42 @@ let rec cStmt stmt (varEnv: VarEnv) (funEnv: FunEnv) (lablist: LabEnv): instr li
                   @ cExpr e varEnv funEnv lablist
                     @ [ IFNZRO labbegin ] @ [ Label labend ]
     
+    | Switch (e, cases) ->
+            let labend = newLabel ()
+            let lablist = labend :: lablist
+
+            let rec parsecase c =
+                match c with
+                | [ Case (cond, body) ] ->
+                    let lab1 = newLabel ()
+                    let lab2 = newLabel ()
+
+                    (lab1,
+                    lab2,
+                    [ Label lab1 ]
+                    @ cExpr (Prim2("==", e, cond)) varEnv funEnv lablist
+                      @ [ IFZERO labend ]
+                        @ [ Label lab2 ] @ cStmt body varEnv funEnv lablist)
+                | Case (cond, body) :: tr ->
+                    let (labnext, labnextbody, code) = parsecase tr
+                    let lab1 = newLabel ()
+                    let lab2 = newLabel ()
+                    // printf "\nlabnext: %A\nlabnextBody: %A \n" labnext labnextbody
+
+                    (lab1,
+                    lab2,
+                    [ Label lab1 ]
+                    @ cExpr (Prim2("==", e, cond)) varEnv funEnv lablist
+                      @ [ IFZERO labnext ]
+                        @ [ Label lab2 ]
+                          @ cStmt body varEnv funEnv lablist
+                            @ [ GOTO labnextbody ] @ code)
+
+                | [] -> (labend, labend, [])
+
+            let (lab1, lab2, code) = parsecase cases
+            code @ [ Label labend ]
+
     | Expr e -> cExpr e varEnv funEnv lablist@ [ INCSP -1 ]
     | Block stmts ->
 
@@ -284,7 +320,6 @@ and cExpr (e: expr) (varEnv: VarEnv) (funEnv: FunEnv) (lablist: LabEnv) : instr 
         @ cExpr e varEnv funEnv lablist@ [ STI ]
     | CstI i -> [ CSTI i ]
     | CstF i -> [ CSTF(System.BitConverter.ToInt32(System.BitConverter.GetBytes(i), 0)) ]
-    | CstC i -> [ CSTC((int32) (System.BitConverter.ToInt16(System.BitConverter.GetBytes(char (i)), 0))) ]
     | Addr acc -> cAccess acc varEnv funEnv lablist
     | Prim1 (ope, e1) ->
         cExpr e1 varEnv funEnv lablist

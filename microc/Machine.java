@@ -14,7 +14,8 @@
 
 import java.io.*;
 import java.util.*;
-
+import type.IntType;
+import type.FloatType;
 class Machine {
   public static void main(String[] args)        
     throws FileNotFoundException, IOException {
@@ -37,7 +38,6 @@ class Machine {
     LDARGS = 24,
     STOP = 25,
     CSTF = 26, 
-    CSTC = 27;
 
   final static int STACKSIZE = 1000;
   
@@ -49,7 +49,14 @@ class Machine {
     int[] s = new int[STACKSIZE];               // The evaluation stack
     int[] iargs = new int[args.length-1];
     for (int i=1; i<args.length; i++)           // Push commandline arguments
-      iargs[i-1] = Integer.parseInt(args[i]);
+    {
+      if (args[i].contains(".")) {
+        iargs[i - 1] = new FloatType(Float.valueOf(args[i]).floatValue());
+      } else {
+        iargs[i - 1] = new IntType(Integer.valueOf(args[i]).intValue());
+      }
+    }
+
     long starttime = System.currentTimeMillis();
     execcode(p, s, iargs, trace);            // Execute program proper
     long runtime = System.currentTimeMillis() - starttime;
@@ -71,11 +78,7 @@ class Machine {
       case CSTF:
         s[sp + 1] = new FloatType(Float.intBitsToFloat(p[pc++]));
         sp++;
-        break;
-      case CSTC:
-        s[sp + 1] = new CharType((char) (p[pc++]));
-        sp++;
-        break;
+        break;  
       case ADD: 
         s[sp-1] = s[sp-1] + s[sp]; sp--; break;
       case SUB: 
@@ -133,14 +136,21 @@ class Machine {
         sp = sp-p[pc]; bp = s[--sp]; pc = s[--sp]; 
         s[sp] = res; 
       } break; 
-      case PRINTI:
+      case PRINTI:{
+        Object result;
+        if (s[sp] instanceof IntType) {
+          result = ((IntType) s[sp]).getValue();
+        } else if (s[sp] instanceof FloatType) {
+          result = ((FloatType) s[sp]).getValue();
+        } 
         System.out.print(s[sp] + " "); break; 
+      }
       case PRINTC:
         System.out.print((char)(s[sp])); break; 
       case LDARGS:
-	for (int i=0; i<iargs.length; i++) // Push commandline arguments
-	  s[++sp] = iargs[i];
-	break;
+        for (int i=0; i<iargs.length; i++) // Push commandline arguments
+          s[++sp] = iargs[i];
+        break;
       case STOP:
         return sp;
       default:                  
@@ -156,7 +166,6 @@ class Machine {
     switch (p[pc]) {
     case CSTI:   return "CSTI " + p[pc+1]; 
     case CSTF:   return "CSTF " + Float.intBitsToFloat(p[pc + 1]);
-    case CSTC:   return "CSTC " + (char) (p[pc + 1]);
     case ADD:    return "ADD";
     case SUB:    return "SUB";
     case MUL:    return "MUL";
@@ -190,8 +199,16 @@ class Machine {
 
   static void printsppc(int[] s, int bp, int sp, int[] p, int pc) {
     System.out.print("[ ");
-    for (int i=0; i<=sp; i++)
-      System.out.print(s[i] + " ");
+    for (int i=0; i<=sp; i++){
+      Object result = null;
+      if (s[i] instanceof IntType) {
+        result = ((IntType) s[i]).getValue();
+      } else if (s[i] instanceof FloatType) {
+        result = ((FloatType) s[i]).getValue();
+      } 
+      System.out.print(String.valueOf(result) + " ");
+    }
+
     System.out.print("]");
     System.out.println("{" + pc + ": " + insname(p, pc) + "}"); 
   }

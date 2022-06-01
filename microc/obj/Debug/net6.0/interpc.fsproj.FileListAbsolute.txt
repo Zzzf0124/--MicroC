@@ -28,3 +28,4 @@ D:\大三\编译原理\大作业\ZZF-MicroC\microc\obj\Debug\net6.0\interpc.fspr
 D:\大三\编译原理\大作业\ZZF-MicroC\microc\obj\Debug\net6.0\interpc.dll
 D:\大三\编译原理\大作业\ZZF-MicroC\microc\obj\Debug\net6.0\interpc.pdb
 D:\大三\编译原理\大作业\ZZF-MicroC\microc\obj\Debug\net6.0\interpc.genruntimeconfig.cache
+d:\大三\编译原理\大作业\ZZF-MicroC\microc\obj\Debug\net6.0\interpc.fsproj.CoreCompileInputs.cache
